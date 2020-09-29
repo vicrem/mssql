@@ -1,0 +1,51 @@
+version: '3.2'
+
+services:
+ mssql:
+    image: mssql.vicrem.se:8443/mssql.vicrem.se:latest
+    hostname: mssql.int.vicrem.se
+    environment:
+      - "TZ=Europe/Stockholm"
+      - "ACCEPT_EULA=Y"
+      - "MSSQL_PID=Developer"
+      - "MSSQL_AGENT_ENABLED=True"
+      - "MSSQL_SA_PASSWORD=P@ssW0rd"
+    networks:
+      - mssql
+    volumes:
+      - "/etc/pki/tls/certs/ca-bundle.crt:/etc/ssl/certs/ca-certificates.crt:ro"
+      - "mssql:/var/opt/mssql"
+    dns_search: "vicrem.se"
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 6G
+      restart_policy:
+        condition: any
+      mode: replicated
+      replicas: 1
+      update_config:
+        delay: 2s
+      labels:
+        # Enable Traefik and network
+        - "traefik.enable=true"
+        - "traefik.docker.network=traefik"
+        # TCP
+        - "traefik.tcp.routers.mssql.rule=HostSNI(`*`)"
+        - "traefik.tcp.routers.mssql.service=mssql"
+        - "traefik.tcp.routers.mssql.entrypoints=mssql"
+        - "traefik.tcp.services.mssql.loadbalancer.server.port=1433"
+
+volumes:
+  mssql:
+    driver: local
+    driver_opts:
+      type: nfs4
+      o: addr=ip_to_nfs
+      device: ":/mnt/nfs/mssql"
+
+networks:
+  mssql:
+    external:
+      name: traefik
