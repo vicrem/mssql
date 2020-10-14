@@ -2,67 +2,97 @@
 
 Contact: victor@vicrem.se
 
-## To do
-* Create keytab during build.
 
-* Clean up image
-    + Remove unnecessary packages/files/configuration from build.
-    + Can sudo be removed(?) or better to use gosu?
+## Create keytab
 
-* I really dont know if this step is necessary 
-    + The server is running with same username (mssql_s_docker) as where I set/create the SPN: 
-    + setspn -A MSSQLSvc/mssql.int.vicrem.se:1433 mssql_s_docker -> if it's not broke dont touch it.
+1) Create a normal AD-user (Example: MSSQLDocker_user)
 
-* Access the server with a URL/SPN matching the wildcard.. I must use the Virtual IP or the host IP where the container is running - smaller issue :)
+2) Manually create a Computer Object with User & Computer (Example: MSSQL-DOCKER-COMPUTER)
 
-## Keytab
+3) Run in Powershell and press Y to reset computer password
+
+```
+ktpass /out mssql.keytab /mapuser MSSQL-DOCKER-COMPUTER$@VICREM.SE /princ MSSQL-DOCKER-COMPUTER$@VICREM.SE /crypto RC4-HMAC-NT /rndpass /ptype KRB5_NT_PRINCIPAL
+
+```
+
+4) Run in Powershell:
+
+* IMPORTANT! Each time ktpass is executed the Kerberos number "kvno" is updated, and all previous keytabs are invalidated. 
+    * If you need multiple SPN in same keytab(?)
+        + First ktpass command add -setupn
+        + Second time add -setupn and -setpass
+
+```
+setspn -A MSSQLSvc/mssql.int.vicrem.se:1433 MSSQLDocker_user
+
+ktpass /princ MSSQLSvc/mssql.int.vicrem.se@VICREM.SE /mapuser MSSQLDocker_user /pass Password_For_MSSQLDocker_user /crypto RC4-HMAC-NT /ptype KRB5_NT_PRINCIPAL /in mssql.keytab /out mssql.keytab -setupn
+
+```
+
+
+5) Check SPN
+
+```
+PS H:\> setspn -L MSSQLDocker_user
+Registered ServicePrincipalNames for CN=MSSQLDocker_user,DC=vicrem,DC=se:
+        MSSQLSvc/mssql.int.vicrem.se:1433
+        
+``` 
+
+
+6) Move mssql.keytab to /var/opt/mssql/secrets/ and change permission/owner so running user mssql (not MSSQLDocker_user) can read the keytab
+
+
+7) Your keytab should look something like this:
 
 ```
 root@mssql:/tmp# klist -kte /var/opt/mssql/secrets/mssql.keytab
+
 Keytab name: FILE:/var/opt/mssql/secrets/mssql.keytab
 KVNO Timestamp         Principal
 ---- ----------------- --------------------------------------------------------
-  11 01/01/70 01:00:00 MSSQLSvc/mssql.int.vicrem.se:1433@VICREM.SE (arcfour-hmac)
-  11 01/01/70 01:00:00 MSSQLSvc/docker-vip.vicrem.se:1433@VICREM.SE (arcfour-hmac)
-  11 01/01/70 01:00:00 MSSQLSvc/node1.vicrem.se:1433@VICREM.SE (arcfour-hmac)
-  11 01/01/70 01:00:00 MSSQLSvc/node2.vicrem.se:1433@VICREM.SE (arcfour-hmac)
-  11 01/01/70 01:00:00 MSSQLSvc/node3.vicrem.se:1433:1433@VICREM.SE (arcfour-hmac)
-```
-
-## TLS
-* openssl req -x509 -nodes -days 3650 -newkey rsa:2048 -keyout cert.key -out cert.pem -config openssl.cfg -sha256
+4 01/01/70 01:00:00 MSSQL-DOCKER-COMPUTER$@VICREM.SE (arcfour-hmac)
+7 01/01/70 01:00:00 MSSQLSvc/mssql.int.vicrem.se:1433@VICREM.SE (arcfour-hmac)
 
 ```
-[req]
-distinguished_name = req_distinguished_name
-x509_extensions = v3_req
-prompt = no
-[req_distinguished_name]
-C = SE
-ST = Skane
-L = Malmo
-O = vicrem.se
-CN = "mssql.int.vicrem.se"
-[v3_req]
-keyUsage = critical, digitalSignature, keyAgreement
-extendedKeyUsage = serverAuth
-subjectAltName = @alt_names
-[alt_names]
-DNS.1 = mssql.int.vicrem.se
-DNS.2 = mssql
-```
 
-## mssql.conf
-```
-[network]
-forceencryption = 1
-tlscert = /var/opt/mssql/ssl/cert.pem
-tlskey = /var/opt/mssql/ssl/cert.key
-tlsciphers = ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA:ECDHE-RSA-AES128-SHA:AES256-GCM-SHA384:AES128-GCM-SHA256:AES256-SHA256:AES128-SHA256:AES256-SHA:AES128-SHA
-tlsprotocols = 1.2
-kerberoskeytabfile = /var/opt/mssql/secrets/mssql.keytab
-enablekdcfromkrb5conf = true
-disablesssd = false
-privilegedadaccount = mssql_s_docker
+
+8) Test your keytab
 
 ```
+kinit MSSQL-DOCKER-COMPUTER$ -kt /var/opt/mssql/secrets/mssql.keytab
+kinit MSSQLSvc/mssql.int.vicrem.se:1433 -kt /var/opt/mssql/secrets/mssql.keytab
+
+```
+
+9) If step 8 == ok then create client.keytab else check KVNO number
+
+```
+cp /var/opt/mssql/secrets/mssql.keytab /var/opt/mssql/secrets/client.keytab
+
+```
+
+
+## Debuging kerberos/ldap
+
+10) Add follwing to /var/opt/mssql/logger.ini - or enable env variables in entrypoint.sh
+
+```
+[Output:sql]
+type=File
+filename=/var/opt/mssql/log/pallog.log
+
+[Logger:security.ldap]
+level=debug
+outputs=sql
+
+[Logger:security.kerberos]
+level=debug
+outputs=sql
+
+```
+
+## To do
+
+* Create keytab during build.

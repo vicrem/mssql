@@ -3,13 +3,20 @@ version: '3.2'
 services:
  mssql:
     image: mssql.vicrem.se:8443/mssql.vicrem.se:latest
-    hostname: mssql.int.vicrem.se
+    hostname: mssqldocker.int.vicrem.se
     environment:
       - "TZ=Europe/Stockholm"
+      # MSSQL settings
       - "ACCEPT_EULA=Y"
       - "MSSQL_PID=Developer"
+      - "MSSQL_TCP_PORT=1433"
       - "MSSQL_AGENT_ENABLED=True"
-      - "MSSQL_SA_PASSWORD=P@ssW0rd"
+      - "MSSQL_SA_PASSWORD=P@ssW0rd1234!"
+      # AD settings
+      - "KERBEROS_REALM=VICREM.SE"
+      - "LDAP_BASE_DN=DC=vicrem,DC=se"
+      # Comma-separate => group1,group2
+      - "LDAP_ADMIN_GROUP=DBA,DBA-DEV"
     networks:
       - mssql
     volumes:
