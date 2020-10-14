@@ -26,7 +26,7 @@ ktpass /out mssql.keytab /mapuser MSSQL-DOCKER-COMPUTER$@VICREM.SE /princ MSSQL-
 ```
 setspn -A MSSQLSvc/mssql.int.vicrem.se:1433 MSSQLDocker_user
 
-ktpass /princ MSSQLSvc/mssql.int.vicrem.se@VICREM.SE /mapuser MSSQLDocker_user /pass Password_For_MSSQLDocker_user /crypto RC4-HMAC-NT /ptype KRB5_NT_PRINCIPAL /in mssql.keytab /out mssql.keytab -setupn
+ktpass /princ MSSQLSvc/mssql.int.vicrem.se:1433@VICREM.SE /mapuser MSSQLDocker_user /pass Password_For_MSSQLDocker_user /crypto RC4-HMAC-NT /ptype KRB5_NT_PRINCIPAL /in mssql.keytab /out mssql.keytab -setupn
 
 ```
 
