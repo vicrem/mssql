@@ -7,12 +7,12 @@ Contact: victor@vicrem.se
 
 1) Create a normal AD-user (Example: MSSQLDocker_user)
 
-2) Manually create a Computer Object with User & Computer (Example: MSSQL-DOCKER-COMPUTER)
+2) Manually create a Computer Object with User & Computer (Example: MSSQL)
 
 3) Run in Powershell and press Y to reset computer password
 
 ```
-ktpass /out mssql.keytab /mapuser MSSQL-DOCKER-COMPUTER$@VICREM.SE /princ MSSQL-DOCKER-COMPUTER$@VICREM.SE /crypto RC4-HMAC-NT /rndpass /ptype KRB5_NT_PRINCIPAL
+ktpass /out mssql.keytab /mapuser MSSQL$@VICREM.SE /princ MSSQL$@VICREM.SE /crypto RC4-HMAC-NT /rndpass /ptype KRB5_NT_PRINCIPAL
 
 ```
 
@@ -24,9 +24,9 @@ ktpass /out mssql.keytab /mapuser MSSQL-DOCKER-COMPUTER$@VICREM.SE /princ MSSQL-
         + Second time add -setupn and -setpass
 
 ```
-setspn -A MSSQLSvc/mssql.int.vicrem.se:1433 MSSQLDocker_user
+setspn -A MSSQLSvc/mssql.vicrem.se:1433 MSSQLDocker_user
 
-ktpass /princ MSSQLSvc/mssql.int.vicrem.se:1433@VICREM.SE /mapuser MSSQLDocker_user /pass Password_For_MSSQLDocker_user /crypto RC4-HMAC-NT /ptype KRB5_NT_PRINCIPAL /in mssql.keytab /out mssql.keytab -setupn
+ktpass /princ MSSQLSvc/mssql.vicrem.se:1433@VICREM.SE /mapuser MSSQLDocker_user /pass Password_For_MSSQLDocker_user /crypto RC4-HMAC-NT /ptype KRB5_NT_PRINCIPAL /in mssql.keytab /out mssql.keytab -setupn
 
 ```
 
@@ -36,7 +36,7 @@ ktpass /princ MSSQLSvc/mssql.int.vicrem.se:1433@VICREM.SE /mapuser MSSQLDocker_u
 ```
 PS H:\> setspn -L MSSQLDocker_user
 Registered ServicePrincipalNames for CN=MSSQLDocker_user,DC=vicrem,DC=se:
-        MSSQLSvc/mssql.int.vicrem.se:1433
+        MSSQLSvc/mssql.vicrem.se:1433
         
 ``` 
 
@@ -52,8 +52,8 @@ root@mssql:/tmp# klist -kte /var/opt/mssql/secrets/mssql.keytab
 Keytab name: FILE:/var/opt/mssql/secrets/mssql.keytab
 KVNO Timestamp         Principal
 ---- ----------------- --------------------------------------------------------
-4 01/01/70 01:00:00 MSSQL-DOCKER-COMPUTER$@VICREM.SE (arcfour-hmac)
-7 01/01/70 01:00:00 MSSQLSvc/mssql.int.vicrem.se:1433@VICREM.SE (arcfour-hmac)
+4 01/01/70 01:00:00 MSSQL$@VICREM.SE (arcfour-hmac)
+7 01/01/70 01:00:00 MSSQLSvc/mssql.vicrem.se:1433@VICREM.SE (arcfour-hmac)
 
 ```
 
@@ -61,8 +61,8 @@ KVNO Timestamp         Principal
 8) Test your keytab
 
 ```
-kinit MSSQL-DOCKER-COMPUTER$ -kt /var/opt/mssql/secrets/mssql.keytab
-kinit MSSQLSvc/mssql.int.vicrem.se:1433 -kt /var/opt/mssql/secrets/mssql.keytab
+kinit MSSQL$ -kt /var/opt/mssql/secrets/mssql.keytab
+kinit MSSQLSvc/mssql.vicrem.se:1433 -kt /var/opt/mssql/secrets/mssql.keytab
 
 ```
 
