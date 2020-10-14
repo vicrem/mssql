@@ -3,7 +3,7 @@ version: '3.2'
 services:
  mssql:
     image: nexus.vicrem.se:8443/mssql.vicrem.se:latest
-    hostname: mssqldocker.int.vicrem.se
+    hostname: mssql.vicrem.se
     environment:
       - "TZ=Europe/Stockholm"
       # MSSQL settings
@@ -41,7 +41,7 @@ services:
         # TCP
         - "traefik.tcp.routers.mssql.rule=HostSNI(`*`)"
         - "traefik.tcp.routers.mssql.service=mssql"
-        - "traefik.tcp.routers.mssql.entrypoints=mssql"
+        - "traefik.tcp.routers.mssql.entrypoints=mssql-tcp"
         - "traefik.tcp.services.mssql.loadbalancer.server.port=1433"
 
 volumes:
