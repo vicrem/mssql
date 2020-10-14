@@ -10,7 +10,7 @@ set -e
 [ -z "${LDAP_USER_MEMBEROF}" ] && LDAP_USER_MEMBEROF="memberOf"
 [ -z "${LDAP_IGNORE_GROUP_MEMBERS}" ] && LDAP_IGNORE_GROUP_MEMBERS="true"
 [ -z "${LDAP_USER_PRINCIPAL}" ] && LDAP_USER_PRINCIPAL="userPrincipalName"
-[ -z "${KRB5_CLIENT_KEYTAB}" ] && KRB5_CLIENT_KEYTAB="/var/opt/mssql/secrets/user.keytab"
+[ -z "${KRB5_CLIENT_KEYTAB}" ] && KRB5_CLIENT_KEYTAB="/var/opt/mssql/secrets/client.keytab"
 [ -z "${KRB5_DEFAULT_KEYTAB}" ] && KRB5_DEFAULT_KEYTAB="/var/opt/mssql/secrets/mssql.keytab"
 [ -z "${KERBEROS_DNS_DISCOVERY_DOMAIN}" ] && KERBEROS_DNS_DISCOVERY_DOMAIN=${KERBEROS_REALM}
 
