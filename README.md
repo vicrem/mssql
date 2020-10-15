@@ -92,6 +92,9 @@ level=debug
 outputs=sql
 
 ```
+## Krb5.conf
+* You might need to tweak krb5.conf to meet your setup -> ${KERBEROS_REALM%%.*} to ${KERBEROS_REALM}
+
 
 ## To do
 
