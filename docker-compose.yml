@@ -1,58 +1,81 @@
-version: '3.2'
+version: '3.4'
 
 services:
  mssql:
-    image: nexus.vicrem.se:8443/mssql.vicrem.se:latest
-    hostname: mssql.vicrem.se
+    image: nexus.vicrem.se:8082/mssql.vicrem.se:latest
+    hostname: mssqlcomputer.vicrem.se
+    dns_search: "vicrem.se"
+    # Pointing to AD
+    dns:
+      - "192.168.1.194"
     environment:
+      # Timezone
       - "TZ=Europe/Stockholm"
+      # Python -> dont create .pyc
+      - "PYTHONDONTWRITEBYTECODE=1"
       # MSSQL settings
       - "ACCEPT_EULA=Y"
       - "MSSQL_PID=Developer"
       - "MSSQL_TCP_PORT=1433"
       - "MSSQL_AGENT_ENABLED=True"
       - "MSSQL_SA_PASSWORD=P@ssW0rd1234!"
+      # MSSQL admin groups -> Comma-separate -> group1,group2
+      - "LDAP_ADMIN_GROUP=DBA"
       # AD settings
       - "KERBEROS_REALM=VICREM.SE"
       - "LDAP_BASE_DN=DC=vicrem,DC=se"
-      # Comma-separate => group1,group2
-      - "LDAP_ADMIN_GROUP=DBA,DBA-DEV"
+      # Creating keytab -> Use it on your own risk!!
+      - "CREATE_KEYTAB=False"
+      # Keytab
+      #- "KRB5_TRACE=/dev/stdout"
+      - "KRB5_CONFIG=/etc/krb5.conf"
+      - "KRB5_KTNAME=/var/opt/mssql/secrets/mssql.keytab"
+      - "KRB5_CLIENT_KTNAME=/var/opt/mssql/secrets/client.keytab"
+      # LDAP settings
+      - "LDAP_PROVIDER_URL=ldaps://ad.vicrem.se:636"
+      - "LDAP_CA_CERT_PATH=/etc/ssl/certs/ca-certificates.crt"
+      - "LDAP_BIND_USERNAME=vic@vicrem.se"
+      - "LDAP_BIND_PASSWORD=P@ssW0rd123456!"
+      # Create user and register a Service Principal Name
+      - "LDAP_CREATE_USER=mssqluser"
+      - "LDAP_CREATE_USER_PASSWORD=P@ssW0rd1234678!"
+      # ServicePrincipalName
+      - "LDAP_CREATE_USER_SPN=MSSQLSvc/mssql.vicrem.se:1433"
+      # Computer object to create -> should match container name
+      - "LDAP_CREATE_COMPUTER=mssqlcomputer"
+      # Path to where objects should be created
+      - "LDAP_USER_DN=CN=Users,DC=vicrem,DC=se"
+      - "LDAP_COMPUTER_DN=CN=Computers,DC=vicrem,DC=se"
+      # Add prefix, ex: victor@vicrem.se
+      - "LDAP_USER_PRINCIPAL_NAME=@vicrem.se"
+      # LDAP filter
+      - "LDAP_USER_FILER=(&(objectClass=user)(sAMAccountName=%s))"
+      - "LDAP_COMPUTER_FILTER=(&(objectClass=computer)(cn=%s))"
     networks:
       - mssql
     volumes:
-      - "/etc/pki/tls/certs/ca-bundle.crt:/etc/ssl/certs/ca-certificates.crt:ro"
+      - "/home/vic/docker-volumes/mssql/secrets/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt:ro"
+      - "/home/vic/docker/mssql:/tmp/mssql"
       - "mssql:/var/opt/mssql"
-    dns_search: "vicrem.se"
-    deploy:
-      resources:
-        limits:
-          cpus: "2"
-          memory: 6G
-      restart_policy:
-        condition: any
-      mode: replicated
-      replicas: 1
-      update_config:
-        delay: 2s
-      labels:
-        # Enable Traefik and network
-        - "traefik.enable=true"
-        - "traefik.docker.network=traefik"
-        # TCP
-        - "traefik.tcp.routers.mssql.rule=HostSNI(`*`)"
-        - "traefik.tcp.routers.mssql.service=mssql"
-        - "traefik.tcp.routers.mssql.entrypoints=mssql-tcp"
-        - "traefik.tcp.services.mssql.loadbalancer.server.port=1433"
+    labels:
+      # Enable Traefik and network
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik"
+      # TCP
+      - "traefik.tcp.routers.mssql.rule=HostSNI(`*`)"
+      - "traefik.tcp.routers.mssql.service=mssql"
+      - "traefik.tcp.routers.mssql.entrypoints=mssql-tcp"
+      - "traefik.tcp.services.mssql.loadbalancer.server.port=1433"
 
 volumes:
   mssql:
     driver: local
     driver_opts:
-      type: nfs4
-      o: addr=ip_to_nfs
-      device: ":/mnt/nfs/mssql"
+      type: 'none'
+      o: 'bind'
+      device: '/home/vic/docker-volumes/mssql'
 
 networks:
   mssql:
     external:
-      name: traefik
+      name: traefik_traefik

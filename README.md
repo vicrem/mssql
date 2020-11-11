@@ -3,16 +3,28 @@
 Contact: victor@vicrem.se
 
 
-## Create keytab
+## Important
+
+* Set "CREATE_KEYTAB" in compose to True if you automatically want to create a keytab - Use it on your own risk!!
+
+
+## Info
+
+* Creation of SPN will take a while before activated in domain/forest.
+    + You may need to redeploy before it works
+
+
+
+## Manually create keytab
 
 1) Create a normal AD-user (Example: MSSQLDocker_user)
 
-2) Manually create a Computer Object with User & Computer (Example: MSSQL)
+2) Manually create a Computer Object with User & Computer (Example: MSSQL-DOCKER-COMPUTER)
 
 3) Run in Powershell and press Y to reset computer password
 
 ```
-ktpass /out mssql.keytab /mapuser MSSQL$@VICREM.SE /princ MSSQL$@VICREM.SE /crypto RC4-HMAC-NT /rndpass /ptype KRB5_NT_PRINCIPAL
+ktpass /out mssql.keytab /mapuser MSSQL-DOCKER-COMPUTER$@VICREM.SE /princ MSSQL-DOCKER-COMPUTER$@VICREM.SE /crypto RC4-HMAC-NT /rndpass /ptype KRB5_NT_PRINCIPAL
 
 ```
 
@@ -52,7 +64,7 @@ root@mssql:/tmp# klist -kte /var/opt/mssql/secrets/mssql.keytab
 Keytab name: FILE:/var/opt/mssql/secrets/mssql.keytab
 KVNO Timestamp         Principal
 ---- ----------------- --------------------------------------------------------
-4 01/01/70 01:00:00 MSSQL$@VICREM.SE (arcfour-hmac)
+4 01/01/70 01:00:00 MSSQL-DOCKER-COMPUTER$@VICREM.SE (arcfour-hmac)
 7 01/01/70 01:00:00 MSSQLSvc/mssql.vicrem.se:1433@VICREM.SE (arcfour-hmac)
 
 ```
@@ -61,7 +73,7 @@ KVNO Timestamp         Principal
 8) Test your keytab
 
 ```
-kinit MSSQL$ -kt /var/opt/mssql/secrets/mssql.keytab
+kinit MSSQL-DOCKER-COMPUTER$ -kt /var/opt/mssql/secrets/mssql.keytab
 kinit MSSQLSvc/mssql.vicrem.se:1433 -kt /var/opt/mssql/secrets/mssql.keytab
 
 ```
@@ -92,10 +104,5 @@ level=debug
 outputs=sql
 
 ```
-## Krb5.conf
-* You might need to tweak krb5.conf to meet your setup -> ${KERBEROS_REALM%%.*} to ${KERBEROS_REALM}
 
 
-## To do
-
-* Create keytab during build.
