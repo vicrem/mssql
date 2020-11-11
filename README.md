@@ -5,7 +5,7 @@ Contact: victor@vicrem.se
 
 ## Important
 
-* Set "CREATE_KEYTAB" in compose to True if you automatically want to create a keytab - Use it on your own risk!!
+* Set "CREATE_KEYTAB" to True if you automatically want to create a keytab - Use it on your own risk!!
 
 
 ## Info
