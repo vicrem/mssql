@@ -7,8 +7,7 @@ import struct
 import pexpect
 
 
-DEBUG = os.getenv("CREATE_KEYTAB_DEBUG")
-
+DEBUG = os.getenv('CREATE_KEYTAB_DEBUG')
 
 
 
@@ -18,17 +17,30 @@ class createKeytab:
 
     def __init__(self, vnoList, keytabPath, encryptionTypes, principalType):
 
-        ktutilSpawned = self.checkVnoInKeytab(vnoList, keytabPath, encryptionTypes, principalType)
+        for ktPath, vnoInList in zip(keytabPath, vnoList):
 
-        if ktutilSpawned:
+            if os.path.exists(keytabPath[ktPath]):
 
-            self.createKeytab(vnoList, keytabPath, ktutilSpawned)
+                keytab = self.getVnoInKeytab(keytabPath[ktPath], encryptionTypes, principalType)
+
+                toDelete = self.checkVnoInKeytab(keytabPath[ktPath], vnoInList, keytab)
+
+                if toDelete:
+                    
+                    print('Vno ' + toDelete[1] + ' is not match with AD, deleting ' + toDelete[0])
+
+                    os.remove(toDelete[0])
+
+                    self.spawnKtutil(keytabPath[ktPath], vnoList)
+            
+            else:
+
+                self.spawnKtutil(keytabPath[ktPath], vnoList)
 
 
 
-        
 
-    def spawnKtutil(self, prompt='ktutil: '):
+    def spawnKtutil(self, keytabPath, vnoList, prompt='ktutil: '):
 
         ktutilSpawned = pexpect.spawn('/usr/bin/ktutil -v')
 
@@ -43,7 +55,7 @@ class createKeytab:
 
         if not problem:
 
-            return ktutilSpawned
+            self.createKeytab(keytabPath, vnoList, ktutilSpawned)
         
         else:
 
@@ -54,7 +66,7 @@ class createKeytab:
 
 
 
-    def createKeytab(self, vnoList, keytabPath, ktutilSpawned):
+    def createKeytab(self, keytabPath, vnoList, ktutilSpawned):
 
         spnList = []
 
@@ -72,12 +84,10 @@ class createKeytab:
 
             ktutilSpawned.sendline(os.getenv('LDAP_CREATE_USER_PASSWORD'))
         
-        
-        for kt in keytabPath:
 
-            ktutilSpawned.sendline('write_kt ' + keytabPath[kt])
+        ktutilSpawned.sendline('write_kt ' + keytabPath)
 
-            print('Creating new keytab ' + keytabPath[kt])
+        print('Creating new keytab ' + keytabPath)
         
 
         ktutilSpawned.sendline('quit')
@@ -86,200 +96,202 @@ class createKeytab:
 
 
 
-    def checkVnoInKeytab(self, vnoList, keytabPath, encryptionTypes, principalType):
-        
+    def getVnoInKeytab(self, keytabPath, encryptionTypes, principalType):
 
-        def dprint(*s):
+        def debugPrint(*s):
             if DEBUG:
                 print(s)
 
+        debugPrint('Keytab: ', keytabPath)
 
-        for ktPath, vnoInList in zip(sorted(keytabPath, reverse=True), vnoList):
+        readKeytab = open(keytabPath, 'rb')
+        keytabFile = readKeytab.read()    
+        readKeytab.close()
 
-            if os.path.exists(keytabPath[ktPath]):
+        # Read version
+        keytabData = keytabFile
+        keytabVersion = int(struct.unpack_from('>H', keytabData)[0])
 
-                dprint("Keytab: ", keytabPath[ktPath])
+        debugPrint('Keytab version: ', hex(keytabVersion))
 
-                readKeytab = open(keytabPath[ktPath], "rb")
-                keytabFile = readKeytab.read()    
-                readKeytab.close()
+        keytabData = keytabData[2:]
+        keytabLength = len(keytabData)
 
-                # Read version
-                keytabData = keytabFile
-                keytabVersion = int(struct.unpack_from(">H", keytabData)[0])
-                dprint("Keytab version: ", hex(keytabVersion))
+        keytab = list()
+
+        # Process entries
+        debugPrint('Starting processing entries.')     
+
+        keytabDone = 0
+
+        while keytabDone < keytabLength:
+
+            debugPrint('==== kte_start')
+
+            keytab.append(dict())
+            kte = keytab[-1]
+            
+
+            # int32_t size;
+            kteLength = int(struct.unpack_from('>i', keytabData)[0])
+            keytabData = keytabData[4:]
+
+            debugPrint('kteLengthgth: ', kteLength)
+
+            kte['size'] = kteLength
+
+
+            # uint16_t num_components;
+            keytabComponents = int(struct.unpack_from('>H', keytabData)[0])
+            keytabData = keytabData[2:]
+            kteDone = 2
+
+            debugPrint('kte_num_components: ', keytabComponents)
+
+            kte['num_components'] = keytabComponents
+
+            # counted_octetString realm;
+            realmLength = int(struct.unpack_from('>H', keytabData)[0])
+            keytabData = keytabData[2:]
+            kteDone += 2
+            realmData = keytabData[:realmLength]
+
+            debugPrint('realmLength: ', realmLength)
+            debugPrint('realmData: ', realmData)
+
+            keytabData = keytabData[realmLength:]
+            kteDone += realmLength
+
+            kte['realm'] = dict()
+            kte['realm']['length'] = realmLength
+            kte['realm']['data'] = realmData
+
+            kte['components'] = list()
+
+            # counted_octetString components[num_components];
+            for kteComponent in range(0, keytabComponents):
+                
+                kte['components'].append(dict())
+
+                debugPrint('kteComponent_#:', kteComponent)
+
+                kteComponentLength = int(struct.unpack_from('>H', keytabData)[0])
+
                 keytabData = keytabData[2:]
-                keytabLength = len(keytabData)
+                kteDone += 2
 
-                keytab = list()
+                kteComponentData = keytabData[:kteComponentLength]
 
-                # Process entries
-                dprint("Starting processing entries.")        
-                keytabDone = 0
+                debugPrint('kteComponentLength:', kteComponentLength)
+                debugPrint('kteComponentData:', kteComponentData)
+                
+                kte['components'][kteComponent]['length'] = kteComponentLength
+                kte['components'][kteComponent]['data'] = kteComponentData
+                
+                keytabData = keytabData[kteComponentLength:]
+                kteDone += kteComponentLength
+            
 
-                while keytabDone < keytabLength:
+            # uint32_t nameType;
+            nameType = principalType[int(struct.unpack_from('>i', keytabData)[0])]
 
-                    dprint("==== kte_start")
-                    keytab.append(dict())
-                    kte = keytab[-1]
-                    
+            debugPrint('nameType: ', nameType)
 
-                    # int32_t size;
-                    kteLength = int(struct.unpack_from(">i", keytabData)[0])
-                    keytabData = keytabData[4:]
-                    dprint("kteLengthgth: ", kteLength)
+            keytabData = keytabData[4:]
+            kteDone += 4
 
-                    kte["size"] = kteLength
-
-
-                    # uint16_t num_components;
-                    keytabComponents = int(struct.unpack_from(">H", keytabData)[0])
-                    keytabData = keytabData[2:]
-                    kteDone = 2
-
-                    dprint("kte_num_components: ", keytabComponents)
-
-                    kte["num_components"] = keytabComponents
-
-                    # counted_octetString realm;
-                    realmLength = int(struct.unpack_from(">H", keytabData)[0])
-                    keytabData = keytabData[2:]
-                    kteDone += 2
-                    realmData = keytabData[:realmLength]
-
-                    dprint("realmLength: ", realmLength)
-                    dprint("realmData: ", realmData)
-
-                    keytabData = keytabData[realmLength:]
-                    kteDone += realmLength
-
-                    kte["realm"] = dict()
-                    kte["realm"]["length"] = realmLength
-                    kte["realm"]["data"] = realmData
-
-                    kte["components"] = list()
-
-                    # counted_octetString components[num_components];
-                    for kteComponent in range(0, keytabComponents):
-                        
-                        kte["components"].append(dict())
-
-                        dprint("kteComponent_#:", kteComponent)
-                        kteComponentLength = int(struct.unpack_from(">H", keytabData)[0])
-
-                        keytabData = keytabData[2:]
-                        kteDone += 2
-
-                        kteComponentData = keytabData[:kteComponentLength]
-                        dprint("kteComponentLength:", kteComponentLength)
-                        dprint("kteComponentData:", kteComponentData)
-                        
-                        kte["components"][kteComponent]["length"] = kteComponentLength
-                        kte["components"][kteComponent]["data"] = kteComponentData
-                        
-                        keytabData = keytabData[kteComponentLength:]
-                        kteDone += kteComponentLength
-                    
-
-                    # uint32_t nameType;
-                    nameType = principalType[int(struct.unpack_from(">i", keytabData)[0])]
-                    dprint("nameType: ", nameType)
-                    keytabData = keytabData[4:]
-                    kteDone += 4
-
-                    kte["nameType"] = nameType
+            kte['nameType'] = nameType
 
 
-                    # uint32_t timestamp;
-                    timestamp = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(int(struct.unpack_from(">i", keytabData)[0])))
-                    dprint("timestamp: ", timestamp)
-                    keytabData = keytabData[4:]
-                    kteDone += 4
+            # uint32_t timestamp;
+            timestamp = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(int(struct.unpack_from('>i', keytabData)[0])))
 
-                    kte["timestamp"] = timestamp
+            debugPrint('timestamp: ', timestamp)
 
-                    # uint8_t vno8;
-                    vno8 = int(struct.unpack_from(">B", keytabData)[0])
-                    dprint("vno8: ", vno8)
-                    keytabData = keytabData[1:]
-                    kteDone += 1
+            keytabData = keytabData[4:]
+            kteDone += 4
 
-                    kte["vno8"] = vno8
+            kte['timestamp'] = timestamp
 
-                    # keyblock key;
-                    kbtype = encryptionTypes[int(struct.unpack_from(">H", keytabData)[0])]
-                    keytabData = keytabData[2:]
-                    kteDone += 2
-                    kblen = int(struct.unpack_from(">H", keytabData)[0])
-                    keytabData = keytabData[2:]
-                    kteDone += 2
+            # uint8_t vno8;
+            vno8 = int(struct.unpack_from('>B', keytabData)[0])
 
-                    #kbdata = keytabData[:kblen]
-                    kbdata = [hex(ord(b)) for b in keytabData[:kblen]]
+            debugPrint('vno8: ', vno8)
 
-                    dprint("keyblock_type: ", kbtype)
-                    dprint("keyblock_len: ", kblen)
-                    dprint("keyblock_data: ", kbdata)
+            keytabData = keytabData[1:]
+            kteDone += 1
 
-                    kte["key"] = dict()
-                    kte["key"]["type"] = kbtype
-                    kte["key"]["octetString"] = dict()
-                    kte["key"]["octetString"]["length"] = kblen
-                    #kte["key"]["octetString"]["data"] = kbdata
+            kte['vno8'] = vno8
 
-                    keytabData = keytabData[kblen:]
-                    kteDone += kblen
-                        
+            # keyblock key;
+            kbtype = encryptionTypes[int(struct.unpack_from('>H', keytabData)[0])]
+            keytabData = keytabData[2:]
+            kteDone += 2
+            kblen = int(struct.unpack_from('>H', keytabData)[0])
+            keytabData = keytabData[2:]
+            kteDone += 2
 
-                    if((kteLength - kteDone) >= 4):
-                        
-                        dprint("Found extra vno.")
-                        
-                        vno = int(struct.unpack_from(">i", keytabData)[0])
-                        dprint("Vno (overridden): ", vno)
-                        keytabData = keytabData[4:]
-                        kteDone += 4
+            #kbdata = keytabData[:kblen]
+            kbdata = [hex(ord(b)) for b in keytabData[:kblen]]
 
-                        kte["vno"] = vno
+            debugPrint('keyblock_type: ', kbtype)
+            debugPrint('keyblock_len: ', kblen)
+            debugPrint('keyblock_data: ', kbdata)
 
-                    keytabDone += kteDone
-                    keytabLength -= 4
-                    dprint("==== kteDone")
+            kte['key'] = dict()
+            kte['key']['type'] = kbtype
+            kte['key']['octetString'] = dict()
+            kte['key']['octetString']['length'] = kblen
+            #kte['key']['octetString']['data'] = kbdata
+
+            keytabData = keytabData[kblen:]
+            kteDone += kblen
                 
 
-                # Debug in json
-                # print(json.dumps(keytab, sort_keys=False, indent=4))
-
-
-                if not int(vnoInList) == vno:
-
-                    for ktRemove in keytabPath:
-
-                        print('Vno ' + str(vnoInList) + ' is not match with AD, deleting ' + keytabPath[ktRemove])
-                        os.remove(keytabPath[ktRemove])
-
-                    ktutilSpawned = self.spawnKtutil()
-
-                    return ktutilSpawned
+            if((kteLength - kteDone) >= 4):
                 
+                debugPrint('Found extra vno.')
+                
+                vno = int(struct.unpack_from('>i', keytabData)[0])
+
+                debugPrint('vno (overridden): ', vno)
+
+                keytabData = keytabData[4:]
+                kteDone += 4
+
+                kte['vno'] = vno
+
+            keytabDone += kteDone
+            keytabLength -= 4
+            
+            debugPrint('==== kteDone')
+    
+
+        # Print in json
+        #print(json.dumps(keytab, sort_keys=False, indent=4))
+        return keytab
+
+
+
+
+    def checkVnoInKeytab(self, keytabPath, vnoInList, keytab):    
+
+
+        for keys in keytab:
+
+            vno = keys['vno8'] if 'vno8' in keys else 'vno'
+
+            if int(vnoInList) == vno:
+
+                if len(keys["components"]) > 1:
+
+                    print('Vno: ' + str(keys["vno8"]) + ' in keytab: ' + keytabPath + ' (for object: ' + keys["components"][0]["data"] + '/' + keys["components"][1]["data"] + '@' + keys["realm"]["data"] + ') is matching with AD')
 
                 else:
-
-                    for keys in keytab:
-
-                        if len(keys["components"]) > 1:
-
-                            print('Vno: ' + str(keys["vno8"]) + ' in keytab: ' + keytabPath[ktPath] + ' (for object: ' + keys["components"][0]["data"] + '/' + keys["components"][1]["data"] + '@' + keys["realm"]["data"] + ') is matching with AD')
-
-                        else:
-                            
-                            print('Vno: ' + str(keys["vno8"]) + ' in keytab: ' + keytabPath[ktPath] + '  (for object: ' + keys["components"][0]["data"] + '@' + keys["realm"]["data"] + ') is matching with AD')
-
-
+                    
+                    print('Vno: ' + str(keys["vno8"]) + ' in keytab: ' + keytabPath + '  (for object: ' + keys["components"][0]["data"] + '@' + keys["realm"]["data"] + ') is matching with AD')
+            
             else:
 
-                ktutilSpawned = self.spawnKtutil()
+                return keytabPath, vnoInList
 
-                return ktutilSpawned
-
-                

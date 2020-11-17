@@ -34,7 +34,7 @@ def main(ldapConnSettings, ldapSearchObject, keytabPath):
 
                 for adObjectAndFilter in objects:
 
-                    ifObjectFound = ldapInitialized.ldapSearchAdObject(ldapSearchObject['LDAP_BASE_DN'], adObjectAndFilter)
+                    ifObjectFound = ldapInitialized.ldapSearchAdObject(ldapSearchObject, adObjectAndFilter)
 
                     objectFound = ldapInitialized.ldapCheckAdObject(ldapSearchObject, adObjectAndFilter, ifObjectFound)
 

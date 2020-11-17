@@ -63,7 +63,7 @@ class ldapConnection:
 
         checkIfObjectExists = self._connection.search_s(
 
-            ldapSearchObject,
+            ldapSearchObject['LDAP_BASE_DN'],
             ldap.SCOPE_SUBTREE,
             adObjectAndFilter[-1] % adObjectAndFilter[1],
             constructedAttributes
@@ -285,7 +285,7 @@ class ldapConnection:
 
         getKvno = self.ldapSearchAdObject(
 
-            ldapSearchObject['LDAP_BASE_DN'], 
+            ldapSearchObject, 
             adObjectAndFilter, 
             constructedAttributes=['*','msDs-keyVersionNumber']
             
