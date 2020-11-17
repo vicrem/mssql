@@ -25,7 +25,7 @@ services:
       - "KERBEROS_REALM=VICREM.SE"
       - "LDAP_BASE_DN=DC=vicrem,DC=se"
       # Creating keytab -> Use it on your own risk!!
-      - "CREATE_KEYTAB=True"
+      - "CREATE_KEYTAB=False"
       - "CREATE_KEYTAB_DEBUG=True"
       #- "KRB5_TRACE=/dev/stdout"
       - "KRB5_CONFIG=/etc/krb5.conf"
