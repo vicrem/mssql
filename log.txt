@@ -1,0 +1,374 @@
+vic@docker:~/docker/mssql$ dockerclean; docker build -t mssql .; docker tag mssql nexus.vicrem.se:8082/mssql.vicrem.se; docker-compose -p mssql up
+da10726cbb4a
+Sending build context to Docker daemon  803.3kB
+Step 1/14 : FROM mcr.microsoft.com/mssql/server:2019-latest
+ ---> 8d8453707e16
+Step 2/14 : ENV GOSU_BINARY https://github.com/tianon/gosu/releases/download/1.12/gosu-amd64
+ ---> Using cache
+ ---> b7a17ee8b6b6
+Step 3/14 : USER root
+ ---> Using cache
+ ---> cd706628b38a
+Step 4/14 : RUN apt-get update &&     apt-get install -y unixodbc-dev krb5-user sssd python-ldap python-pexpect
+ ---> Using cache
+ ---> 72d725cad1d8
+Step 5/14 : RUN wget -qO /usr/local/bin/gosu ${GOSU_BINARY}  && chmod +x /usr/local/bin/gosu
+ ---> Using cache
+ ---> eea44fc19fa3
+Step 6/14 : WORKDIR /docker-entrypoint-initdb.d
+ ---> Using cache
+ ---> 8f7558a0d3d4
+Step 7/14 : COPY sql_script/MaintenanceSolution.sql MaintenanceSolution.sql
+ ---> Using cache
+ ---> 4a2b108038b9
+Step 8/14 : COPY sql_script/sql_agent_jobs.sql sql_agent_jobs.sql
+ ---> Using cache
+ ---> e3a53d33e472
+Step 9/14 : WORKDIR /tmp
+ ---> Using cache
+ ---> 473b4eaf8022
+Step 10/14 : COPY keytab keytab
+ ---> Using cache
+ ---> ce10aad3e307
+Step 11/14 : COPY init_script/entrypoint.sh entrypoint.sh
+ ---> Using cache
+ ---> 2c6e02e57a0e
+Step 12/14 : COPY init_script/initialization.sh initialization.sh
+ ---> Using cache
+ ---> 1e76b8ac8ab0
+Step 13/14 : RUN  chmod +x initialization.sh
+ ---> Using cache
+ ---> 483a66fd3d5a
+Step 14/14 : CMD [ "/bin/bash", "/tmp/entrypoint.sh" ]
+ ---> Using cache
+ ---> d0027309fd2b
+Successfully built d0027309fd2b
+Successfully tagged mssql:latest
+Creating mssql_mssql_1 ... done
+Attaching to mssql_mssql_1
+mssql_1  | SQL Server 2019 will run as non-root by default.
+mssql_1  | This container is running as user root.
+mssql_1  | To learn more visit https://go.microsoft.com/fwlink/?linkid=2099216.
+mssql_1  | Success, ADUser mssqluser is now created
+mssql_1  | Success, ADUser mssqluser received new passwd
+mssql_1  | Success, ADUser mssqluser is now enabled
+mssql_1  | Success, ComputerObject mssqlcomputer is now created
+mssql_1  | Success, ComputerObject mssqlcomputer received new passwd
+mssql_1  | Creating new keytab /var/opt/mssql/secrets/client.keytab
+mssql_1  | Creating new keytab /var/opt/mssql/secrets/mssql.keytab
+mssql_1  | Generating a RSA private key
+mssql_1  | ..........................(Tue Nov 17 13:07:01:182009 2020) [sssd] [confdb_init_db] (0x0100): LDIF file to import: 
+mssql_1  | dn: cn=config
+mssql_1  | version: 2
+mssql_1  | 
+mssql_1  | dn: cn=sssd,cn=config
+mssql_1  | cn: sssd
+mssql_1  | user: sssd
+mssql_1  | services: nss
+mssql_1  | config_file_version: 2
+mssql_1  | domains: VICREM.SE
+mssql_1  | 
+mssql_1  | dn: cn=VICREM.SE,cn=domain,cn=config
+mssql_1  | cn: VICREM.SE
+mssql_1  | ad_domain: VICREM.SE
+mssql_1  | id_provider: ad
+mssql_1  | access_provider: ad
+mssql_1  | auth_provider: ad
+mssql_1  | chpass_provider: ad
+mssql_1  | subdomains_provider: ad
+mssql_1  | sudo_provider: none
+mssql_1  | autofs_provider: none
+mssql_1  | selinux_provider: none
+mssql_1  | krb5_realm: VICREM.SE
+mssql_1  | krb5_keytab: /var/opt/mssql/secrets/mssql.keytab
+mssql_1  | dyndns_update: False
+mssql_1  | cache_credentials: True
+mssql_1  | use_fully_qualified_names: True
+mssql_1  | dns_discovery_domain: VICREM.SE
+mssql_1  | ignore_group_members: True
+mssql_1  | ldap_id_mapping: True
+mssql_1  | ldap_group_nesting_level: 0
+mssql_1  | ldap_account_expire_policy: ad
+mssql_1  | ldap_force_upper_case_realm: True
+mssql_1  | 
+mssql_1  | dn: cn=nss,cn=config
+mssql_1  | cn: nss
+mssql_1  | filter_groups: root
+mssql_1  | filter_users: root
+mssql_1  | 
+mssql_1  | 
+mssql_1  | .+++++
+mssql_1  | .......+++++
+mssql_1  | writing new private key to '/etc/ssl/private/cert.key'
+mssql_1  | -----
+mssql_1  | (Tue Nov 17 13:07:01:205399 2020) [sssd] [confdb_ensure_files_domain] (0x0100): The implicit files domain is disabled
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd] [sss_names_init_from_args] (0x0100): Using re [(((?P<domain>[^\\]+)\\(?P<name>.+$))|((?P<name>[^@]+)@(?P<domain>.+$))|(^(?P<name>[^@\\]+)$))].
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd] [sss_fqnames_init] (0x0100): Using fq format [%1$s@%2$s].
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd] [start_service] (0x0100): Queueing service VICREM.SE for startup
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [be_res_get_opts] (0x0100): Lookup order: ipv4_first
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [recreate_ares_channel] (0x0100): Initializing new c-ares channel
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [monitor_common_send_id] (0x0100): Sending ID: (%BE_VICREM.SE,1)
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [sss_names_init_from_args] (0x0100): Using re [(((?P<domain>[^\\]+)\\(?P<name>.+$))|((?P<name>[^@]+)@(?P<domain>.+$))|(^(?P<name>[^@\\]+)$))].
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [sss_fqnames_init] (0x0100): Using fq format [%1$s@%2$s].
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [dp_load_configuration] (0x0100): Using [ad] provider for [id]
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [dp_load_configuration] (0x0100): Using [ad] provider for [auth]
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [dp_load_configuration] (0x0100): Using [ad] provider for [access]
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [dp_load_configuration] (0x0100): Using [ad] provider for [chpass]
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [dp_load_configuration] (0x0100): Using [none] provider for [sudo]
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [dp_load_configuration] (0x0100): Using [none] provider for [autofs]
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [dp_load_configuration] (0x0100): Using [none] provider for [selinux]
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [dp_load_configuration] (0x0100): Using [ad] provider for [hostid]
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [dp_load_configuration] (0x0100): Using [ad] provider for [subdomains]
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [dp_load_configuration] (0x0100): Using [ad] provider for [session]
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [ad_get_common_options] (0x0100): No AD server set, will use service discovery!
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [ad_get_common_options] (0x0100): Setting ad_hostname to [mssqlcomputer.vicrem.se].
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [ad_get_common_options] (0x0100): Setting domain option case_sensitive to [false]
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [ad_failover_init] (0x0100): No primary servers defined, using service discovery
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [_ad_servers_init] (0x0100): Added service discovery for AD
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [ad_set_sdap_options] (0x0100): Option krb5_realm set to VICREM.SE
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [ad_set_sdap_options] (0x0100): Option ldap_krb5_keytab set to /var/opt/mssql/secrets/mssql.keytab
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [sdap_set_sasl_options] (0x0100): Will look for mssqlcomputer.vicrem.se@VICREM.SE in /var/opt/mssql/secrets/mssql.keytab
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [sdap_set_sasl_options] (0x0100): Option ldap_sasl_authid set to mssqlcomputer$
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [sdap_set_sasl_options] (0x0100): Option ldap_sasl_realm set to VICREM.SE
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [ad_set_search_bases] (0x0100): Search base not set. SSSD will attempt to discover it later, when connecting to the LDAP server.
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [ad_dyndns_init] (0x0100): Dynamic DNS updates are off.
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [sysdb_idmap_get_mappings] (0x0080): Could not locate ID mappings: [No such file or directory]
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [ad_machine_account_password_renewal_init] (0x0100): The helper program [/usr/sbin/adcli] for renewal doesn't exist [2]: No such file or directory
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [ad_get_auth_options] (0x0100): Option krb5_server set to (null)
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [ad_get_auth_options] (0x0100): Option krb5_realm set to VICREM.SE
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [ad_get_auth_options] (0x0100): Option krb5_use_kdcinfo set to true
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [sss_krb5_check_options] (0x0100): No KDC explicitly configured, using defaults.
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [sss_krb5_check_options] (0x0100): No kpasswd server explicitly configured, using the KDC or defaults.
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [sss_krb5_check_options] (0x0100): ccache is of type FILE
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [parse_krb5_map_user] (0x0100): krb5_map_user is empty!
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [dp_target_init] (0x0100): Target [hostid] is not supported by module [ad].
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [ad_set_search_bases] (0x0100): Search base not set. SSSD will attempt to discover it later, when connecting to the LDAP server.
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [dp_target_init] (0x0100): Target [session] is not supported by module [ad].
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [fo_resolve_service_send] (0x0100): Trying to resolve service 'AD'
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [resolv_getsrv_send] (0x0100): Trying to resolve SRV record of '_ldap._tcp.VICREM.SE'
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd] [client_registration] (0x0100): Received ID registration: (%BE_VICREM.SE,1)
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd] [mark_service_as_started] (0x0100): Now starting services!
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd] [start_service] (0x0100): Queueing service nss for startup
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [id_callback] (0x0100): Got id ack and version (1) from Monitor
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [resolv_gethostbyname_files_send] (0x0100): Trying to resolve A record of 'ad.vicrem.se' in files
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [resolv_gethostbyname_files_send] (0x0100): Trying to resolve AAAA record of 'ad.vicrem.se' in files
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [resolv_gethostbyname_dns_query] (0x0100): Trying to resolve A record of 'ad.vicrem.se' in DNS
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[nss]] [monitor_common_send_id] (0x0100): Sending ID: (nss,1)
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[nss]] [sss_names_init_from_args] (0x0100): Using re [(((?P<domain>[^\\]+)\\(?P<name>.+$))|((?P<name>[^@]+)@(?P<domain>.+$))|(^(?P<name>[^@\\]+)$))].
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[nss]] [sss_fqnames_init] (0x0100): Using fq format [%1$s@%2$s].
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [dp_client_init] (0x0100): Set-up Backend ID timeout [0x55ef54e9f7b0]
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[nss]] [sss_names_init_from_args] (0x0100): Using re [(((?P<domain>[^\\]+)\\(?P<name>.+$))|((?P<name>[^@]+)@(?P<domain>.+$))|(^(?P<name>[^@\\]+)$))].
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[nss]] [sss_fqnames_init] (0x0100): Using fq format [%1$s@%2$s].
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [resolv_getsrv_send] (0x0100): Trying to resolve SRV record of '_ldap._tcp.Default-First-Site-Name._sites.VICREM.SE'
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[nss]] [responder_set_fd_limit] (0x0100): Maximum file descriptors set to [8192]
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [dp_client_register] (0x0100): Cancel DP ID timeout [0x55ef54e9f7b0]
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [dp_client_register] (0x0100): Added Frontend client [NSS]
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [resolv_getsrv_send] (0x0100): Trying to resolve SRV record of '_ldap._tcp.VICREM.SE'
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd] [client_registration] (0x0100): Received ID registration: (nss,1)
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[nss]] [id_callback] (0x0100): Got id ack and version (1) from Monitor
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [set_srv_data_status] (0x0100): Marking SRV lookup of service 'AD' as 'resolved'
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [resolv_gethostbyname_files_send] (0x0100): Trying to resolve A record of 'ad.vicrem.se' in files
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [set_server_common_status] (0x0100): Marking server 'ad.vicrem.se' as 'resolving name'
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [resolv_gethostbyname_files_send] (0x0100): Trying to resolve AAAA record of 'ad.vicrem.se' in files
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [resolv_gethostbyname_dns_query] (0x0100): Trying to resolve A record of 'ad.vicrem.se' in DNS
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [set_server_common_status] (0x0100): Marking server 'ad.vicrem.se' as 'name resolved'
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [ad_resolve_callback] (0x0100): Constructed uri 'ldap://ad.vicrem.se'
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [ad_resolve_callback] (0x0100): Constructed GC uri 'ldap://ad.vicrem.se'
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [sdap_set_search_base] (0x0100): Setting option [ldap_search_base] to [DC=vicrem,DC=se].
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [common_parse_search_base] (0x0100): Search base added: [DEFAULT][DC=vicrem,DC=se][SUBTREE][]
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [sdap_set_search_base] (0x0100): Setting option [ldap_user_search_base] to [DC=vicrem,DC=se].
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [common_parse_search_base] (0x0100): Search base added: [USER][DC=vicrem,DC=se][SUBTREE][]
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [sdap_set_search_base] (0x0100): Setting option [ldap_group_search_base] to [DC=vicrem,DC=se].
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [common_parse_search_base] (0x0100): Search base added: [GROUP][DC=vicrem,DC=se][SUBTREE][]
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [sdap_set_search_base] (0x0100): Setting option [ldap_netgroup_search_base] to [DC=vicrem,DC=se].
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [common_parse_search_base] (0x0100): Search base added: [NETGROUP][DC=vicrem,DC=se][SUBTREE][]
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [sdap_set_search_base] (0x0100): Setting option [ldap_host_search_base] to [DC=vicrem,DC=se].
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [common_parse_search_base] (0x0100): Search base added: [HOST][DC=vicrem,DC=se][SUBTREE][]
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [sdap_set_search_base] (0x0100): Setting option [ldap_sudo_search_base] to [DC=vicrem,DC=se].
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [common_parse_search_base] (0x0100): Search base added: [SUDO][DC=vicrem,DC=se][SUBTREE][]
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [sdap_set_search_base] (0x0100): Setting option [ldap_service_search_base] to [DC=vicrem,DC=se].
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [common_parse_search_base] (0x0100): Search base added: [SERVICE][DC=vicrem,DC=se][SUBTREE][]
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [sdap_set_search_base] (0x0100): Setting option [ldap_autofs_search_base] to [DC=vicrem,DC=se].
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [common_parse_search_base] (0x0100): Search base added: [AUTOFS][DC=vicrem,DC=se][SUBTREE][]
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [sdap_get_server_opts_from_rootdse] (0x0100): Setting AD compatibility level to [7]
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [fo_resolve_service_send] (0x0100): Trying to resolve service 'AD'
+mssql_1  | (Tue Nov 17 13:07:01 2020) [[sssd[ldap_child[109]]]] [ldap_child_get_tgt_sync] (0x0100): Principal name is: [mssqlcomputer$@VICREM.SE]
+mssql_1  | (Tue Nov 17 13:07:01 2020) [[sssd[ldap_child[109]]]] [ldap_child_get_tgt_sync] (0x0100): Using keytab [MEMORY:/var/opt/mssql/secrets/mssql.keytab]
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [sdap_cli_auth_step] (0x0100): expire timeout is 900
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [sasl_bind_send] (0x0100): Executing sasl bind mech: gssapi, user: mssqlcomputer$
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [child_sig_handler] (0x0100): child [109] finished successfully.
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [fo_set_port_status] (0x0100): Marking port 389 of server 'ad.vicrem.se' as 'working'
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [set_server_common_status] (0x0100): Marking server 'ad.vicrem.se' as 'working'
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [be_run_online_cb] (0x0080): Going online. Running callbacks.
+mssql_1  | (Tue Nov 17 13:07:01 2020) [sssd[be[VICREM.SE]]] [be_ptask_enable] (0x0080): Task [Subdomains Refresh]: already enabled
+mssql_1  | 2020-11-17 13:07:05.28 Server      Setup step is copying system data file 'C:\templatedata\master.mdf' to '/var/opt/mssql/data/master.mdf'.
+2020-11-17 13:07:05.46 Server      Did not find an existing master data file /var/opt/mssql/data/master.mdf, copying the missing default master and other system database files. If you have moved the database location, but not moved the database files, startup may fail. To repair: shutdown SQL Server, move the master database to configured location, and restart.
+2020-11-17 13:07:05.48 Server      Setup step is copying system data file 'C:\templatedata\mastlog.ldf' to '/var/opt/mssql/data/mastlog.ldf'.
+2020-11-17 13:07:05.50 Server      Setup step is copying system data file 'C:\templatedata\model.mdf' to '/var/opt/mssql/data/model.mdf'.
+2020-11-17 13:07:05.52 Server      Setup step is copying system data file 'C:\templatedata\modellog.ldf' to '/var/opt/mssql/data/modellog.ldf'.
+2020-11-17 13:07:05.55 Server      Setup step is copying system data file 'C:\templatedata\msdbdata.mdf' to '/var/opt/mssql/data/msdbdata.mdf'.
+2020-11-17 13:07:05.57 Server      Setup step is copying system data file 'C:\templatedata\msdblog.ldf' to '/var/opt/mssql/data/msdblog.ldf'.
+2020-11-17 13:07:05.59 Server      Setup step is FORCE copying system data file 'C:\templatedata\model_replicatedmaster.mdf' to '/var/opt/mssql/data/model_replicatedmaster.mdf'.
+2020-11-17 13:07:05.61 Server      Setup step is FORCE copying system data file 'C:\templatedata\model_replicatedmaster.ldf' to '/var/opt/mssql/data/model_replicatedmaster.ldf'.
+2020-11-17 13:07:05.63 Server      Setup step is FORCE copying system data file 'C:\templatedata\model_msdbdata.mdf' to '/var/opt/mssql/data/model_msdbdata.mdf'.
+2020-11-17 13:07:05.65 Server      Setup step is FORCE copying system data file 'C:\templatedata\model_msdblog.ldf' to '/var/opt/mssql/data/model_msdblog.ldf'.
+2020-11-17 13:07:05.89 Server      Microsoft SQL Server 2019 (RTM-CU7) (KB4570012) - 15.0.4063.15 (X64) 
+mssql_1 Aug 15 2020 10:48:11 
+mssql_1 Copyright (C) 2019 Microsoft Corporation
+mssql_1 Developer Edition (64-bit) on Linux (Ubuntu 18.04.5 LTS) <X64>
+2020-11-17 13:07:05.90 Server      UTC adjustment: 1:00
+2020-11-17 13:07:05.91 Server      (c) Microsoft Corporation.
+2020-11-17 13:07:05.91 Server      All rights reserved.
+2020-11-17 13:07:05.92 Server      Server process ID is 40.
+2020-11-17 13:07:05.92 Server      Logging SQL Server messages in file '/var/opt/mssql/log/errorlog'.
+2020-11-17 13:07:05.93 Server      Registry startup parameters: 
+mssql_1  -d /var/opt/mssql/data/master.mdf
+mssql_1  -l /var/opt/mssql/data/mastlog.ldf
+mssql_1  -e /var/opt/mssql/log/errorlog
+2020-11-17 13:07:05.94 Server      SQL Server detected 1 sockets with 2 cores per socket and 4 logical processors per socket, 4 total logical processors; using 4 logical processors based on SQL Server licensing. This is an informational message; no user action is required.
+2020-11-17 13:07:05.96 Server      SQL Server is starting at normal priority base (=7). This is an informational message only. No user action is required.
+2020-11-17 13:07:05.97 Server      Detected 12750 MB of RAM. This is an informational message; no user action is required.
+2020-11-17 13:07:05.98 Server      Using conventional memory in the memory manager.
+2020-11-17 13:07:06.00 Server      Page exclusion bitmap is enabled.
+2020-11-17 13:07:06.03 Server      Buffer pool extension is not supported on Linux platform.
+2020-11-17 13:07:06.04 Server      Buffer Pool: Allocating 2097152 bytes for 1527273 hashPages.
+2020-11-17 13:07:06.94 Server      Buffer pool extension is already disabled. No action is necessary.
+2020-11-17 13:07:09.63 Server      Successfully initialized the TLS configuration. Allowed TLS protocol versions are ['1.2']. Allowed TLS ciphers are ['ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA:ECDHE-RSA-AES128-SHA:AES256-GCM-SHA384:AES128-GCM-SHA256:AES256-SHA256:AES128-SHA256:AES256-SHA:AES128-SHA'].
+2020-11-17 13:07:09.72 Server      Query Store settings initialized with enabled = 1, 
+2020-11-17 13:07:09.75 Server      The maximum number of dedicated administrator connections for this instance is '1'
+2020-11-17 13:07:09.75 Server      Node configuration: node 0: CPU mask: 0x000000000000000f:0 Active CPU mask: 0x000000000000000f:0. This message provides a description of the NUMA configuration for this computer. This is an informational message only. No user action is required.
+2020-11-17 13:07:09.78 Server      Using dynamic lock allocation.  Initial allocation of 2500 Lock blocks and 5000 Lock Owner blocks per node.  This is an informational message only.  No user action is required.
+2020-11-17 13:07:09.83 Server      In-Memory OLTP initialized on lowend machine.
+2020-11-17 13:07:09.89 Server      [INFO] Created Extended Events session 'hkenginexesession'
+2020-11-17 13:07:09.90 Server      Database Instant File Initialization: enabled. For security and performance considerations see the topic 'Database Instant File Initialization' in SQL Server Books Online. This is an informational message only. No user action is required.
+ForceFlush is enabled for this instance. 
+2020-11-17 13:07:09.93 Server      Total Log Writer threads: 2. This is an informational message; no user action is required.
+2020-11-17 13:07:09.94 Server      CLR version v4.0.30319 loaded.
+2020-11-17 13:07:09.95 Server      clflush is selected for pmem flush operation.
+2020-11-17 13:07:09.96 Server      Software Usage Metrics is disabled.
+2020-11-17 13:07:09.97 spid9s      [1]. Feature Status: PVS: 0. CTR: 0. ConcurrentPFSUpdate: 1.
+2020-11-17 13:07:09.98 spid9s      Starting up database 'master'.
+ForceFlush feature is enabled for log durability.
+2020-11-17 13:07:10.28 spid9s      The tail of the log for database master is being rewritten to match the new sector size of 4096 bytes.  3584 bytes at offset 393728 in file /var/opt/mssql/data/mastlog.ldf will be written.
+2020-11-17 13:07:10.40 Server      Common language runtime (CLR) functionality initialized.
+2020-11-17 13:07:10.55 spid9s      Converting database 'master' from version 897 to the current version 904.
+2020-11-17 13:07:10.56 spid9s      Database 'master' running the upgrade step from version 897 to version 898.
+2020-11-17 13:07:10.59 spid9s      Database 'master' running the upgrade step from version 898 to version 899.
+2020-11-17 13:07:10.63 spid9s      Database 'master' running the upgrade step from version 899 to version 900.
+2020-11-17 13:07:10.66 spid9s      Database 'master' running the upgrade step from version 900 to version 901.
+2020-11-17 13:07:10.68 spid9s      Database 'master' running the upgrade step from version 901 to version 902.
+2020-11-17 13:07:10.72 spid9s      Database 'master' running the upgrade step from version 902 to version 903.
+2020-11-17 13:07:10.74 spid9s      Database 'master' running the upgrade step from version 903 to version 904.
+2020-11-17 13:07:11.14 spid9s      Resource governor reconfiguration succeeded.
+2020-11-17 13:07:11.14 spid9s      SQL Server Audit is starting the audits. This is an informational message. No user action is required.
+2020-11-17 13:07:11.16 spid9s      SQL Server Audit has started the audits. This is an informational message. No user action is required.
+2020-11-17 13:07:11.28 spid9s      SQL Trace ID 1 was started by login "sa".
+2020-11-17 13:07:11.31 spid35s     Password policy update was successful.
+2020-11-17 13:07:11.32 spid9s      Server name is 'mssqlcomputer'. This is an informational message only. No user action is required.
+2020-11-17 13:07:11.36 spid12s     [32767]. Feature Status: PVS: 0. CTR: 0. ConcurrentPFSUpdate: 1.
+2020-11-17 13:07:11.37 spid37s     Always On: The availability replica manager is starting. This is an informational message only. No user action is required.
+2020-11-17 13:07:11.37 spid9s      [4]. Feature Status: PVS: 0. CTR: 0. ConcurrentPFSUpdate: 1.
+2020-11-17 13:07:11.39 spid12s     Starting up database 'mssqlsystemresource'.
+2020-11-17 13:07:11.40 spid37s     Always On: The availability replica manager is waiting for the instance of SQL Server to allow client connections. This is an informational message only. No user action is required.
+2020-11-17 13:07:11.40 spid9s      Starting up database 'msdb'.
+2020-11-17 13:07:11.42 spid12s     The resource database build version is 15.00.4063. This is an informational message only. No user action is required.
+2020-11-17 13:07:11.52 spid12s     [3]. Feature Status: PVS: 0. CTR: 0. ConcurrentPFSUpdate: 1.
+2020-11-17 13:07:11.53 spid12s     Starting up database 'model'.
+2020-11-17 13:07:11.76 spid9s      The tail of the log for database msdb is being rewritten to match the new sector size of 4096 bytes.  3072 bytes at offset 50176 in file /var/opt/mssql/data/MSDBLog.ldf will be written.
+2020-11-17 13:07:11.85 spid35s     The certificate [Certificate File:'/etc/ssl/private/cert.pem', Private Key File:'/etc/ssl/private/cert.key'] was successfully loaded for encryption.
+2020-11-17 13:07:11.86 spid12s     The tail of the log for database model is being rewritten to match the new sector size of 4096 bytes.  512 bytes at offset 73216 in file /var/opt/mssql/data/modellog.ldf will be written.
+2020-11-17 13:07:11.88 spid9s      Converting database 'msdb' from version 897 to the current version 904.
+2020-11-17 13:07:11.89 spid9s      Database 'msdb' running the upgrade step from version 897 to version 898.
+2020-11-17 13:07:11.89 spid35s     Server is listening on [ 'any' <ipv6> 1433].
+2020-11-17 13:07:11.90 spid35s     Server is listening on [ 'any' <ipv4> 1433].
+2020-11-17 13:07:11.93 Server      Server is listening on [ ::1 <ipv6> 1434].
+2020-11-17 13:07:11.93 Server      Server is listening on [ 127.0.0.1 <ipv4> 1434].
+2020-11-17 13:07:11.94 Server      Dedicated admin connection support was established for listening locally on port 1434.
+2020-11-17 13:07:11.96 spid35s     Server is listening on [ ::1 <ipv6> 1431].
+2020-11-17 13:07:11.97 spid35s     Server is listening on [ 127.0.0.1 <ipv4> 1431].
+2020-11-17 13:07:11.97 spid35s     SQL Server is now ready for client connections. This is an informational message; no user action is required.
+2020-11-17 13:07:11.98 spid9s      Database 'msdb' running the upgrade step from version 898 to version 899.
+2020-11-17 13:07:12.03 spid12s     Converting database 'model' from version 897 to the current version 904.
+2020-11-17 13:07:12.04 spid9s      Database 'msdb' running the upgrade step from version 899 to version 900.
+2020-11-17 13:07:12.05 spid12s     Database 'model' running the upgrade step from version 897 to version 898.
+2020-11-17 13:07:12.11 spid12s     Database 'model' running the upgrade step from version 898 to version 899.
+2020-11-17 13:07:12.11 spid9s      Database 'msdb' running the upgrade step from version 900 to version 901.
+2020-11-17 13:07:12.15 spid9s      Database 'msdb' running the upgrade step from version 901 to version 902.
+2020-11-17 13:07:12.16 spid12s     Database 'model' running the upgrade step from version 899 to version 900.
+2020-11-17 13:07:12.19 spid12s     Database 'model' running the upgrade step from version 900 to version 901.
+2020-11-17 13:07:12.22 spid12s     Database 'model' running the upgrade step from version 901 to version 902.
+2020-11-17 13:07:12.25 spid12s     Database 'model' running the upgrade step from version 902 to version 903.
+2020-11-17 13:07:12.27 spid12s     Database 'model' running the upgrade step from version 903 to version 904.
+2020-11-17 13:07:12.39 spid12s     Clearing tempdb database.
+2020-11-17 13:07:12.98 spid12s     [2]. Feature Status: PVS: 0. CTR: 0. ConcurrentPFSUpdate: 1.
+2020-11-17 13:07:12.99 spid12s     Starting up database 'tempdb'.
+2020-11-17 13:07:13.28 spid12s     The tempdb database has 1 data file(s).
+2020-11-17 13:07:13.29 spid37s     The Service Broker endpoint is in disabled or stopped state.
+2020-11-17 13:07:13.30 spid37s     The Database Mirroring endpoint is in disabled or stopped state.
+2020-11-17 13:07:13.32 spid37s     Service Broker manager has started.
+2020-11-17 13:07:13.34 spid9s      Database 'msdb' running the upgrade step from version 902 to version 903.
+2020-11-17 13:07:13.37 spid9s      Database 'msdb' running the upgrade step from version 903 to version 904.
+2020-11-17 13:07:13.52 spid9s      Recovery is complete. This is an informational message only. No user action is required.
+2020-11-17 13:07:13.92 spid11s     The default language (LCID 0) has been set for engine and full-text services.
+2020-11-17 13:07:14.06 spid51      Configuration option 'show advanced options' changed from 0 to 1. Run the RECONFIGURE statement to install.
+2020-11-17 13:07:14.10 spid51      Configuration option 'Agent XPs' changed from 0 to 1. Run the RECONFIGURE statement to install.
+2020-11-17 13:07:14.14 spid51      Configuration option 'show advanced options' changed from 1 to 0. Run the RECONFIGURE statement to install.
+2020-11-17 13:07:14.35 spid51      Attempting to load library 'xpsqlbot.dll' into memory. This is an informational message only. No user action is required.
+2020-11-17 13:07:14.36 spid51      Using 'xpsqlbot.dll' version '2019.150.4063' to execute extended stored procedure 'xp_qv'. This is an informational message only; no user action is required.
+2020-11-17 13:07:14.48 spid51      Attempting to load library 'xpstar.dll' into memory. This is an informational message only. No user action is required.
+2020-11-17 13:07:14.65 spid51      Using 'xpstar.dll' version '2019.150.4063' to execute extended stored procedure 'xp_sqlagent_notify'. This is an informational message only; no user action is required.
+2020-11-17 13:07:14.72 spid11s     The tempdb database has 4 data file(s).
+Changed database context to 'master'.
+mssql_1  | Changed database context to 'msdb'.
+mssql_1  | Changed database context to 'master'.
+mssql_1  | (Tue Nov 17 13:07:34 2020) [sssd[nss]] [get_client_cred] (0x0080): The following failure is expected to happen in case SELinux is disabled:
+mssql_1  | SELINUX_getpeercon failed [92][Protocol not available].
+mssql_1  | Please, consider enabling SELinux in your system.
+mssql_1  | (Tue Nov 17 13:07:34 2020) [sssd[be[VICREM.SE]]] [sysdb_idmap_store_mapping] (0x0100): Adding new ID mapping [VICREM.SE][S-1-5-21-3375461179-2130057859-858413572][8195]
+mssql_1  | (Tue Nov 17 13:07:34 2020) [sssd[be[VICREM.SE]]] [fo_resolve_service_send] (0x0100): Trying to resolve service 'AD_GC'
+mssql_1  | (Tue Nov 17 13:07:34 2020) [sssd[be[VICREM.SE]]] [resolv_getsrv_send] (0x0100): Trying to resolve SRV record of '_ldap._tcp.Default-First-Site-Name._sites.VICREM.SE'
+mssql_1  | (Tue Nov 17 13:07:34 2020) [sssd[be[VICREM.SE]]] [resolv_gethostbyname_files_send] (0x0100): Trying to resolve A record of 'ad.vicrem.se' in files
+mssql_1  | (Tue Nov 17 13:07:34 2020) [sssd[be[VICREM.SE]]] [resolv_gethostbyname_files_send] (0x0100): Trying to resolve AAAA record of 'ad.vicrem.se' in files
+mssql_1  | (Tue Nov 17 13:07:34 2020) [sssd[be[VICREM.SE]]] [resolv_gethostbyname_dns_query] (0x0100): Trying to resolve A record of 'ad.vicrem.se' in DNS
+mssql_1  | (Tue Nov 17 13:07:34 2020) [sssd[be[VICREM.SE]]] [resolv_getsrv_send] (0x0100): Trying to resolve SRV record of '_gc._tcp.Default-First-Site-Name._sites.vicrem.se'
+mssql_1  | (Tue Nov 17 13:07:34 2020) [sssd[be[VICREM.SE]]] [resolv_getsrv_send] (0x0100): Trying to resolve SRV record of '_gc._tcp.vicrem.se'
+mssql_1  | (Tue Nov 17 13:07:34 2020) [sssd[be[VICREM.SE]]] [set_srv_data_status] (0x0100): Marking SRV lookup of service 'AD_GC' as 'resolved'
+mssql_1  | (Tue Nov 17 13:07:34 2020) [sssd[be[VICREM.SE]]] [ad_resolve_callback] (0x0100): Constructed uri 'ldap://ad.vicrem.se'
+mssql_1  | (Tue Nov 17 13:07:34 2020) [sssd[be[VICREM.SE]]] [ad_resolve_callback] (0x0100): Constructed GC uri 'ldap://ad.vicrem.se:3268'
+mssql_1  | (Tue Nov 17 13:07:34 2020) [sssd[be[VICREM.SE]]] [sdap_get_server_opts_from_rootdse] (0x0100): Setting AD compatibility level to [7]
+mssql_1  | (Tue Nov 17 13:07:34 2020) [sssd[be[VICREM.SE]]] [fo_resolve_service_send] (0x0100): Trying to resolve service 'AD'
+mssql_1  | (Tue Nov 17 13:07:34 2020) [[sssd[ldap_child[318]]]] [ldap_child_get_tgt_sync] (0x0100): Principal name is: [mssqlcomputer$@VICREM.SE]
+mssql_1  | (Tue Nov 17 13:07:34 2020) [[sssd[ldap_child[318]]]] [ldap_child_get_tgt_sync] (0x0100): Using keytab [MEMORY:/var/opt/mssql/secrets/mssql.keytab]
+mssql_1  | (Tue Nov 17 13:07:34 2020) [sssd[be[VICREM.SE]]] [child_sig_handler] (0x0100): child [318] finished successfully.
+mssql_1  | (Tue Nov 17 13:07:34 2020) [sssd[be[VICREM.SE]]] [sdap_cli_auth_step] (0x0100): expire timeout is 900
+mssql_1  | (Tue Nov 17 13:07:34 2020) [sssd[be[VICREM.SE]]] [sasl_bind_send] (0x0100): Executing sasl bind mech: gssapi, user: mssqlcomputer$
+mssql_1  | (Tue Nov 17 13:07:34 2020) [sssd[be[VICREM.SE]]] [fo_set_port_status] (0x0100): Marking port 3268 of server 'ad.vicrem.se' as 'working'
+mssql_1  | (Tue Nov 17 13:07:34 2020) [sssd[be[VICREM.SE]]] [set_server_common_status] (0x0100): Marking server 'ad.vicrem.se' as 'working'
+mssql_1  | (Tue Nov 17 13:07:34 2020) [sssd[be[VICREM.SE]]] [sdap_process_group_send] (0x0040): No Members. Done!
+mssql_1  | (Tue Nov 17 13:07:34 2020) [sssd[be[VICREM.SE]]] [sdap_save_grpmem] (0x0020): Group members are ignored, nothing to do. If you see this message it might indicate an error in the group processing logic.
+mssql_1  | 2020-11-17 13:07:43.02 spid51      Attempting to load library 'xplog70.dll' into memory. This is an informational message only. No user action is required.
+
+# Windows login 
+2020-11-17 13:07:43.17 spid51      Using 'xplog70.dll' version '2019.150.4063' to execute extended stored procedure 'xp_msver'. This is an informational message only; no user action is required.
+(Tue Nov 17 13:08:02 2020) [sssd[nss]] [well_known_sid_to_name] (0x0040): handle_special_sids failed.
+mssql_1  | (Tue Nov 17 13:08:02 2020) [sssd[nss]] [cache_req_is_well_known_object] (0x0020): CR #31: Unable to prepare data [22]: Invalid argument
+mssql_1  | (Tue Nov 17 13:08:02 2020) [sssd[nss]] [get_client_cred] (0x0080): The following failure is expected to happen in case SELinux is disabled:
+mssql_1  | SELINUX_getpeercon failed [92][Protocol not available].
+mssql_1  | Please, consider enabling SELinux in your system.
+mssql_1  | (Tue Nov 17 13:08:02 2020) [sssd[nss]] [well_known_sid_to_name] (0x0040): handle_special_sids failed.
+mssql_1  | (Tue Nov 17 13:08:02 2020) [sssd[nss]] [cache_req_is_well_known_object] (0x0020): CR #32: Unable to prepare data [22]: Invalid argument
+mssql_1  | (Tue Nov 17 13:08:02 2020) [sssd[nss]] [get_client_cred] (0x0080): The following failure is expected to happen in case SELinux is disabled:
+mssql_1  | SELINUX_getpeercon failed [92][Protocol not available].
+mssql_1  | Please, consider enabling SELinux in your system.
+
+# Windows authorization
+mssql_1  | (Tue Nov 17 13:08:02 2020) [sssd[be[VICREM.SE]]] [sdap_process_group_send] (0x0040): No Members. Done!
+mssql_1  | (Tue Nov 17 13:08:02 2020) [sssd[be[VICREM.SE]]] [sdap_save_grpmem] (0x0020): Group members are ignored, nothing to do. If you see this message it might indicate an error in the group processing logic.
+mssql_1  | (Tue Nov 17 13:08:02 2020) [sssd[be[VICREM.SE]]] [sdap_process_group_send] (0x0040): No Members. Done!
+mssql_1  | (Tue Nov 17 13:08:02 2020) [sssd[be[VICREM.SE]]] [sdap_save_grpmem] (0x0020): Group members are ignored, nothing to do. If you see this message it might indicate an error in the group processing logic.
+mssql_1  | (Tue Nov 17 13:08:02 2020) [sssd[be[VICREM.SE]]] [sdap_process_group_send] (0x0040): No Members. Done!
+mssql_1  | (Tue Nov 17 13:08:02 2020) [sssd[be[VICREM.SE]]] [sdap_save_grpmem] (0x0020): Group members are ignored, nothing to do. If you see this message it might indicate an error in the group processing logic.
+mssql_1  | (Tue Nov 17 13:08:02 2020) [sssd[be[VICREM.SE]]] [sdap_process_group_send] (0x0040): No Members. Done!
+mssql_1  | (Tue Nov 17 13:08:02 2020) [sssd[be[VICREM.SE]]] [sdap_save_grpmem] (0x0020): Group members are ignored, nothing to do. If you see this message it might indicate an error in the group processing logic.
+mssql_1  | (Tue Nov 17 13:08:02 2020) [sssd[be[VICREM.SE]]] [sdap_process_group_send] (0x0040): No Members. Done!
+mssql_1  | (Tue Nov 17 13:08:02 2020) [sssd[be[VICREM.SE]]] [sdap_save_grpmem] (0x0020): Group members are ignored, nothing to do. If you see this message it might indicate an error in the group processing logic.
