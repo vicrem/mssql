@@ -10,22 +10,22 @@ class ldapConnection:
     _connection = None
 
 
-    def __init__(self, ldap_conn_settings):
+    def __init__(self, ldapConnSettings):
 
-        self.s = ldap_conn_settings
+        self.s = ldapConnSettings
 
         ldapInitialized = self.ldapInitialize(self.s['LDAP_PROVIDER_URL'], self.s['LDAP_CA_CERT_PATH'], self.s['LDAP_BIND_USERNAME'], self.s['LDAP_BIND_PASSWORD'])
 
 
 
 
-    def ldapInitialize(self, ldap_provider_url, ldap_ca_cert_path, ldap_bind_username, ldap_bind_password):
+    def ldapInitialize(self, ldapProviderUrl, ldapCaCertCath, ldapBindUsername, ldapBindPassword):
 
         try:
 
-            self._connection = ldap.initialize(ldap_provider_url)#,trace_level=2)
+            self._connection = ldap.initialize(ldapProviderUrl)#,trace_level=2)
 
-            self._connection.set_option(ldap.OPT_X_TLS_CACERTFILE, ldap_ca_cert_path)
+            self._connection.set_option(ldap.OPT_X_TLS_CACERTFILE, ldapCaCertCath)
 
             self._connection.set_option(ldap.OPT_REFERRALS, 0)
 
@@ -38,8 +38,8 @@ class ldapConnection:
 
             status = self._connection.simple_bind_s(
 
-                ldap_bind_username,
-                ldap_bind_password
+                ldapBindUsername,
+                ldapBindPassword
 
             )
 
@@ -47,10 +47,12 @@ class ldapConnection:
 
 
         except ldap.INVALID_CREDENTIALS as err:
+            
             raise SystemExit(err)
 
             
         except ldap.SERVER_DOWN as err:
+            
             raise SystemExit(err)
 
 
@@ -83,21 +85,25 @@ class ldapConnection:
 
             if not objectFound:
 
-                return 'objectDoesNotExist'
+                return 'userObjectDoesNotExist'
 
 
             elif not 'servicePrincipalName' in objectFound[0]:
 
-                return 'objectExistsWithOutSpn'
+                return 'userObjectExistsWithOutSpn'
 
                                 
             else:
 
-                print('objectAlreadyExistsWithSpn')
-                userKvno = self.ldapGetKvnoNumber(ldapSearchObject, adObjectAndFilter)
-                return userKvno
+                userVno = self.ldapGetVnoNumber(ldapSearchObject, adObjectAndFilter)
+
+                print('userObjectAlreadyExistsWithSpn with kvno ' + userVno + ', checking if in keytab..')
+
+                return userVno
         
+
         else:
+
 
             if not objectFound:
 
@@ -105,14 +111,16 @@ class ldapConnection:
 
             else:
 
-                print('ComputerExists')
-                computerKvno = self.ldapGetKvnoNumber(ldapSearchObject, adObjectAndFilter)
-                return computerKvno
+                computerVno = self.ldapGetVnoNumber(ldapSearchObject, adObjectAndFilter)
+
+                print('ComputerExists with kvno ' + computerVno + ', checking if in keytab..')
+
+                return computerVno
 
 
 
 
-    def ldapCreateUserObject(self, adObjectAndFilter, createObjectWithAllAttrs=True):
+    def ldapCreateUserObject(self, adObjectAndFilter, createObjectWithAllAttrs=''):
 
         userCreate = adObjectAndFilter[1]
 
@@ -134,17 +142,17 @@ class ldapConnection:
             attrs['userAccountControl'] = '514'
             attrs['mail'] = ''.join([userCreate, os.getenv('LDAP_USER_PRINCIPAL_NAME')])
             attrs['ou'] = os.getenv('LDAP_USER_DN')
-            attrs['servicePrincipalName'] = os.getenv('LDAP_CREATE_USER_SPN')
+            attrs['servicePrincipalName'] = os.getenv('LDAP_CREATE_SPN')
 
             # Prep the password
             password = os.getenv('LDAP_CREATE_USER_PASSWORD')
-            unicode_pass = unicode('\"' + password + '\"', 'iso-8859-1')
-            password_value = unicode_pass.encode('utf-16-le')
-            add_pass = [(ldap.MOD_REPLACE, 'unicodePwd', [password_value])]
+            unicodePass = unicode('\"' + password + '\"', 'iso-8859-1')
+            passwordValue = unicodePass.encode('utf-16-le')
+            addPass = [(ldap.MOD_REPLACE, 'unicodePwd', [passwordValue])]
 
 
             # UserAccountcontrol: http://www.selfadsi.org/ads-attributes/user-userAccountControl.htm
-            mod_acct = [(ldap.MOD_REPLACE, 'userAccountControl', '66048')]
+            modAcct = [(ldap.MOD_REPLACE, 'userAccountControl', '66048')]
 
 
             # Prep attrs
@@ -152,49 +160,67 @@ class ldapConnection:
 
 
             try:
+
                 self._connection.add_s(dn, ldif)
+
                 print('Success, ADUser ' +userCreate+ ' is now created' )
 
 
             except ldap.LDAPError, error_message:
+
                 print 'Error adding new user: %s' % error_message
+
                 return False
 
 
             try:
-                self._connection.modify_s(dn, add_pass)
+
+                self._connection.modify_s(dn, addPass)
+
                 print('Success, ADUser ' +userCreate+ ' received new passwd' )
 
 
             except ldap.LDAPError, error_message:
+
                 print 'Error setting password: %s' % error_message
+
                 return False
 
 
             try:
-                self._connection.modify_s(dn, mod_acct)
+
+                self._connection.modify_s(dn, modAcct)
+
                 print('Success, ADUser ' +userCreate+ ' is now enabled' )
+
                 return True
 
 
             except ldap.LDAPError, error_message:
+
                 print 'Error enabling user: %s' % error_message
+
                 return False
 
 
         else:
 
-            ldif = [(ldap.MOD_REPLACE, 'servicePrincipalName', os.getenv('LDAP_CREATE_USER_SPN'))]
+            ldif = [(ldap.MOD_REPLACE, 'servicePrincipalName', os.getenv('LDAP_CREATE_SPN'))]
 
 
             try:
+
                 self._connection.modify_s(dn, ldif)
-                print('Success, SPN ' + os.getenv('LDAP_CREATE_USER_SPN') + ' is now set for object ' + userCreate)
+
+                print('Success, SPN ' + os.getenv('LDAP_CREATE_SPN') + ' is now set for object ' + userCreate)
+
                 return True
 
 
             except ldap.LDAPError, error_message:
+
                 print 'Could not set SPN: %s' % error_message
+
                 return False
 
 
@@ -214,7 +240,7 @@ class ldapConnection:
         attrs['userAccountControl'] = '4128'
 
         # Prep the password
-        computerPassword = os.getenv('LDAP_CREATE_USER_PASSWORD')
+        computerPassword = os.getenv('LDAP_CREATE_COMPUTER_PASSWORD')
         computerUnicodePass = unicode('\"' + computerPassword + '\"', 'iso-8859-1')
         computerPassword_value = computerUnicodePass.encode('utf-16-le')
         computerAddPass = [(ldap.MOD_REPLACE, 'unicodePwd', [computerPassword_value])]
@@ -224,29 +250,38 @@ class ldapConnection:
 
 
         try:
+
             self._connection.add_s(dn, ldif)
+
             print('Success, ComputerObject ' +computerCreate+ ' is now created' )
             
 
         except ldap.LDAPError, error_message:
+
             print 'Error adding new ComputerObject: %s' % error_message
+
             return False
 
 
         try:
+
             self._connection.modify_s(dn, computerAddPass)
+
             print('Success, ComputerObject ' +computerCreate+ ' received new passwd' )
+
             return True
             
 
         except ldap.LDAPError, error_message:
+
             print 'Error setting ComputerObject password: %s' % error_message
+
             return False
 
 
 
 
-    def ldapGetKvnoNumber(self, ldapSearchObject, adObjectAndFilter):
+    def ldapGetVnoNumber(self, ldapSearchObject, adObjectAndFilter):
 
         getKvno = self.ldapSearchAdObject(
 
@@ -259,10 +294,12 @@ class ldapConnection:
         msDS = [entry for dn, entry in getKvno if isinstance(entry, dict)]
 
         for key in msDS:
+
             return str(key['msDS-KeyVersionNumber']).strip('[]').strip("\'")
 
 
 
 
     def close(self):
+        
         self._connection.unbind_s()

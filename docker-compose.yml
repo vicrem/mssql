@@ -25,8 +25,8 @@ services:
       - "KERBEROS_REALM=VICREM.SE"
       - "LDAP_BASE_DN=DC=vicrem,DC=se"
       # Creating keytab -> Use it on your own risk!!
-      - "CREATE_KEYTAB=False"
-      # Keytab
+      - "CREATE_KEYTAB=True"
+      - "CREATE_KEYTAB_DEBUG=True"
       #- "KRB5_TRACE=/dev/stdout"
       - "KRB5_CONFIG=/etc/krb5.conf"
       - "KRB5_KTNAME=/var/opt/mssql/secrets/mssql.keytab"
@@ -39,10 +39,11 @@ services:
       # Create user and register a Service Principal Name
       - "LDAP_CREATE_USER=mssqluser"
       - "LDAP_CREATE_USER_PASSWORD=P@ssW0rd1234678!"
-      # ServicePrincipalName
-      - "LDAP_CREATE_USER_SPN=MSSQLSvc/mssql.vicrem.se:1433"
       # Computer object to create -> should match container name
       - "LDAP_CREATE_COMPUTER=mssqlcomputer"
+      - "LDAP_CREATE_COMPUTER_PASSWORD=P@ssW0rd1234678!"
+      # ServicePrincipalName
+      - "LDAP_CREATE_SPN=MSSQLSvc/mssql.vicrem.se:1433"
       # Path to where objects should be created
       - "LDAP_USER_DN=CN=Users,DC=vicrem,DC=se"
       - "LDAP_COMPUTER_DN=CN=Computers,DC=vicrem,DC=se"
