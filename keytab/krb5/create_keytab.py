@@ -297,12 +297,18 @@ class createKeytab:
         i = 1
         for vnoInList in vnoList:
 
-            if int(vnoInList) == ktSpn[i]:
-                
-                print('Vno: ' + str(ktSpn[i]) + ' in keytab: ' + keytabPath + ' (for object: ' + str(ktSpn[i-1]) + ') match with AD')                  
-                    
-            else:
+            if len(ktSpn) <= 1:
 
                 return keytabPath, vnoInList
             
-            i += 2
+            else:
+
+                if int(vnoInList) == ktSpn[i]:
+                    
+                    print('Vno: ' + str(ktSpn[i]) + ' in keytab: ' + keytabPath + ' (for object: ' + str(ktSpn[i-1]) + ') match with AD')                  
+                        
+                else:
+
+                    return keytabPath, vnoInList
+                
+                i += 2
