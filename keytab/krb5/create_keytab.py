@@ -8,6 +8,7 @@ import pexpect
 
 
 DEBUG = os.getenv('CREATE_KEYTAB_DEBUG')
+DEBUG = False
 
 
 
@@ -17,13 +18,13 @@ class createKeytab:
 
     def __init__(self, vnoList, keytabPath, encryptionTypes, principalType):
 
-        for ktPath, vnoInList in zip(keytabPath, vnoList):
+        for ktPath in keytabPath:
 
             if os.path.exists(keytabPath[ktPath]):
 
                 keytab = self.getVnoInKeytab(keytabPath[ktPath], encryptionTypes, principalType)
 
-                toDelete = self.checkVnoInKeytab(keytabPath[ktPath], vnoInList, keytab)
+                toDelete = self.checkVnoInKeytab(keytabPath[ktPath], vnoList, keytab)
 
                 if toDelete:
                     
@@ -274,24 +275,34 @@ class createKeytab:
 
 
 
-    def checkVnoInKeytab(self, keytabPath, vnoInList, keytab):    
+    def checkVnoInKeytab(self, keytabPath, vnoList, keytab):    
 
+        ktSpn = list()
 
         for keys in keytab:
 
             vno = keys['vno8'] if 'vno8' in keys else 'vno'
 
-            if int(vnoInList) == vno:
+            if len(keys["components"]) > 1:
 
-                if len(keys["components"]) > 1:
+                c = keys["components"][0]["data"] + '/' + keys["components"][1]["data"] + '@' + keys["realm"]["data"]
 
-                    print('Vno: ' + str(keys["vno8"]) + ' in keytab: ' + keytabPath + ' (for object: ' + keys["components"][0]["data"] + '/' + keys["components"][1]["data"] + '@' + keys["realm"]["data"] + ') is matching with AD')
-
-                else:
-                    
-                    print('Vno: ' + str(keys["vno8"]) + ' in keytab: ' + keytabPath + '  (for object: ' + keys["components"][0]["data"] + '@' + keys["realm"]["data"] + ') is matching with AD')
+            else:
+                   
+                c = keys["components"][0]["data"] + '@' + keys["realm"]["data"]
             
+            ktSpn.extend((c, vno))
+
+
+        i = 1
+        for vnoInList in vnoList:
+
+            if int(vnoInList) == ktSpn[i]:
+                
+                print('Vno: ' + str(ktSpn[i]) + ' in keytab: ' + keytabPath + ' (for object: ' + str(ktSpn[i-1]) + ') match with AD')                  
+                    
             else:
 
                 return keytabPath, vnoInList
-
+            
+            i += 2
