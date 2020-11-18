@@ -105,4 +105,6 @@ outputs=sql
 
 ```
 
-
+## ToDo
+* Create Keytab script: 
+    + what if only one object exists and the other not? => Need to fix it!
