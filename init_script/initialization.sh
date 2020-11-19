@@ -1,7 +1,6 @@
 #!/bin/bash
 set -e
 
-
 # Mandatory input
 [ -z "${KERBEROS_REALM}" ] && echo "KERBEROS_REALM must be defined" && exit 1
 
@@ -157,10 +156,20 @@ disablesssd = false
 EOF
 
 
+# Create dirs if not exists
+CHECK_DIR=(/var/opt/mssql/backup /var/opt/mssql/secrets)
+
+for dirs in "${CHECK_DIR[@]}"; do
+    if [ ! -d $dirs ]; then
+        mkdir $dirs && \
+        chown mssql $dirs
+    fi
+done
+
+
 # Create keytab
 if [ "${CREATE_KEYTAB}" = "True" ]; then
-    python /tmp/keytab/run.py && \
-    chown mssql -R /var/opt/mssql/secrets
+    python /tmp/keytab/run.py
 fi
 
 
@@ -172,12 +181,6 @@ exec /usr/sbin/sssd -i -d 4 &
 # Create TLS cert and set permission
 openssl req -x509 -nodes -days 3650 -newkey rsa:2048 -keyout /etc/ssl/private/cert.key -out /etc/ssl/private/cert.pem -config /etc/ssl/openssl.cnf -sha256 && \
 chown -R mssql /etc/ssl/private/
-
-
-# Create backup dir
-if [ ! -d /var/opt/mssql/backup ]; then
-    mkdir /var/opt/mssql/backup
-fi
 
 
 # Wait to be sure that SQL Server is up & running
@@ -192,21 +195,21 @@ for files in $(ls -d /docker-entrypoint-initdb.d/*); do
 done
 
 
+function create_admin_group() {
+cat >/tmp/create_admin_group.sql <<-EOF
+    USE [master]
+    GO
+    CREATE LOGIN [${KERBEROS_REALM%%.*}\\${groups}] FROM WINDOWS WITH DEFAULT_DATABASE=[master]
+    GO
+    ALTER SERVER ROLE [sysadmin] ADD MEMBER [${KERBEROS_REALM%%.*}\\${groups}]
+    GO
+EOF
+}
+
 # Create login for Admin group
 if [ ! -z "${LDAP_ADMIN_GROUP}" ]; then
-
     for groups in $( echo "${LDAP_ADMIN_GROUP}" | sed 's/,/ /g'); do
-
-cat >/tmp/create_admin_group.sql <<EOF
-USE [master]
-GO
-CREATE LOGIN [${KERBEROS_REALM%%.*}\\${groups}] FROM WINDOWS WITH DEFAULT_DATABASE=[master]
-GO
-ALTER SERVER ROLE [sysadmin] ADD MEMBER [${KERBEROS_REALM%%.*}\\${groups}]
-GO
-EOF
-
+        create_admin_group $groups
         /opt/mssql-tools/bin/sqlcmd -S localhost,${MSSQL_TCP_PORT} -U sa -P ${MSSQL_SA_PASSWORD} -i /tmp/create_admin_group.sql
     done
-
 fi
