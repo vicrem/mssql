@@ -8,7 +8,6 @@ import pexpect
 
 
 DEBUG = os.getenv('CREATE_KEYTAB_DEBUG')
-DEBUG = False
 
 
 
