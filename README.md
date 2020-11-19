@@ -6,6 +6,7 @@ Contact: victor@vicrem.se
 ## Important
 
 * Set "CREATE_KEYTAB" to True if you automatically want to create a keytab - Use it on your own risk!!
+* If you want to be on the safe side, manually create the objects and then run the script.
 
 
 ## Info
@@ -104,7 +105,3 @@ level=debug
 outputs=sql
 
 ```
-
-## ToDo
-* Create Keytab script: 
-    + what if only one object exists and the other not? => Need to fix it!
