@@ -19,13 +19,13 @@ class ldapConnection:
 
 
 
-    def ldapInitialize(self, ldapProviderUrl, ldapCaCertCath, ldapBindUsername, ldapBindPassword):
+    def ldapInitialize(self, ldapProviderUrl, ldapCaCertPath, ldapBindUsername, ldapBindPassword):
 
         try:
 
             self._connection = ldap.initialize(ldapProviderUrl)#,trace_level=2)
 
-            self._connection.set_option(ldap.OPT_X_TLS_CACERTFILE, ldapCaCertCath)
+            self._connection.set_option(ldap.OPT_X_TLS_CACERTFILE, ldapCaCertPath)
 
             self._connection.set_option(ldap.OPT_REFERRALS, 0)
 
