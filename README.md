@@ -6,12 +6,12 @@ Contact: victor@vicrem.se
 ## Important
 
 * Set "CREATE_KEYTAB" to True if you automatically want to create a keytab - Use it on your own risk!!
-* If you want to be on the safe side, manually create the objects and then run the script.
+* To be on the safe side, manually create the User & Computer objects and then run the script.
 
 
 ## Info
 
-* Creation of SPN will take a while before activated in domain/forest.
+* Creation of SPN will/could take a while before activated through domain/forest.
     + You may need to redeploy before it works
 
 
