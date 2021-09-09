@@ -134,28 +134,29 @@ class ldapConnection:
         if createObjectWithAllAttrs:
             
             attrs['objectclass'] = ['top', 'person', 'organizationalPerson','user']
-            attrs['cn'] = userCreate
-            attrs['userPrincipalName'] = ''.join([userCreate, os.getenv('LDAP_USER_PRINCIPAL_NAME')])
-            attrs['sAMAccountName'] = userCreate
-            attrs['givenName'] = userCreate
-            attrs['DisplayName'] = userCreate
-            attrs['userAccountControl'] = '514'
-            attrs['mail'] = ''.join([userCreate, os.getenv('LDAP_USER_PRINCIPAL_NAME')])
-            attrs['ou'] = os.getenv('LDAP_USER_DN')
-            attrs['servicePrincipalName'] = os.getenv('LDAP_CREATE_SPN')
+            attrs['cn'] = [userCreate]
+            attrs['userPrincipalName'] = [''.join([userCreate, os.getenv('LDAP_USER_PRINCIPAL_NAME')])]
+            attrs['sAMAccountName'] = [userCreate]
+            attrs['givenName'] = [userCreate]
+            attrs['DisplayName'] = [userCreate]
+            attrs['userAccountControl'] = ['514']
+            attrs['mail'] = [''.join([userCreate, os.getenv('LDAP_USER_PRINCIPAL_NAME')])]
+            attrs['ou'] = [os.getenv('LDAP_USER_DN')]
+            attrs['servicePrincipalName'] = [os.getenv('LDAP_CREATE_SPN')]
 
             # Prep the password
             password = os.getenv('LDAP_CREATE_USER_PASSWORD')
-            unicodePass = unicode('\"' + password + '\"', 'iso-8859-1')
+            unicodePass = '\"' + password + '\"'
             passwordValue = unicodePass.encode('utf-16-le')
             addPass = [(ldap.MOD_REPLACE, 'unicodePwd', [passwordValue])]
 
 
             # UserAccountcontrol: http://www.selfadsi.org/ads-attributes/user-userAccountControl.htm
-            modAcct = [(ldap.MOD_REPLACE, 'userAccountControl', '66048')]
+            modAcct = [(ldap.MOD_REPLACE, 'userAccountControl', [b'66048'])]
 
 
             # Prep attrs
+            attrs = {key:[v.encode("utf-8") if type(v) == str else v for v in values] for key, values in attrs.items()}
             ldif = modlist.addModlist(attrs)
 
 
@@ -166,9 +167,9 @@ class ldapConnection:
                 print('Success, ADUser ' +userCreate+ ' is now created' )
 
 
-            except ldap.LDAPError, error_message:
+            except ldap.LDAPError as error_message:
 
-                print 'Error adding new user: %s' % error_message
+                print('Error adding new user: {}'.format(error_message))
 
                 return False
 
@@ -180,9 +181,9 @@ class ldapConnection:
                 print('Success, ADUser ' +userCreate+ ' received new passwd' )
 
 
-            except ldap.LDAPError, error_message:
+            except ldap.LDAPError as error_message:
 
-                print 'Error setting password: %s' % error_message
+                print('Error setting password: {}'.format(error_message))
 
                 return False
 
@@ -196,16 +197,16 @@ class ldapConnection:
                 return True
 
 
-            except ldap.LDAPError, error_message:
-
-                print 'Error enabling user: %s' % error_message
+            except ldap.LDAPError as error_message:
+                
+                print('Error enabling user: {}'.format(error_message))
 
                 return False
 
 
         else:
 
-            ldif = [(ldap.MOD_REPLACE, 'servicePrincipalName', os.getenv('LDAP_CREATE_SPN'))]
+            ldif = [(ldap.MOD_REPLACE, b'servicePrincipalName', os.getenv('LDAP_CREATE_SPN'))]
 
 
             try:
@@ -217,9 +218,9 @@ class ldapConnection:
                 return True
 
 
-            except ldap.LDAPError, error_message:
+            except ldap.LDAPError as error_message:
 
-                print 'Could not set SPN: %s' % error_message
+                print('Could not set SPN: {}'.format(error_message))
 
                 return False
 
@@ -235,17 +236,19 @@ class ldapConnection:
         
         attrs = {}
         attrs['objectclass'] = ['computer']
-        attrs['cn'] = computerCreate
-        attrs['sAMAccountName'] = ''.join([computerCreate, '$'])
-        attrs['userAccountControl'] = '4128'
+        attrs['cn'] = [computerCreate]
+        attrs['sAMAccountName'] = [''.join([computerCreate, '$'])]
+        attrs['userAccountControl'] = ['4128']
 
         # Prep the password
         computerPassword = os.getenv('LDAP_CREATE_COMPUTER_PASSWORD')
-        computerUnicodePass = unicode('\"' + computerPassword + '\"', 'iso-8859-1')
+        computerUnicodePass = '\"' + computerPassword + '\"'
         computerPassword_value = computerUnicodePass.encode('utf-16-le')
         computerAddPass = [(ldap.MOD_REPLACE, 'unicodePwd', [computerPassword_value])]
 
+
         # Prep attrs
+        attrs = {key:[v.encode("utf-8") if type(v) == str else v for v in values] for key, values in attrs.items()}
         ldif = modlist.addModlist(attrs)
 
 
@@ -256,9 +259,9 @@ class ldapConnection:
             print('Success, ComputerObject ' +computerCreate+ ' is now created' )
             
 
-        except ldap.LDAPError, error_message:
+        except ldap.LDAPError as error_message:
 
-            print 'Error adding new ComputerObject: %s' % error_message
+            print('Error adding new ComputerObject: {}'.format(error_message))
 
             return False
 
@@ -272,9 +275,9 @@ class ldapConnection:
             return True
             
 
-        except ldap.LDAPError, error_message:
+        except ldap.LDAPError as error_message:
 
-            print 'Error setting ComputerObject password: %s' % error_message
+            print('Error setting ComputerObject password: {}'.format(error_message))
 
             return False
 
@@ -295,7 +298,7 @@ class ldapConnection:
 
         for key in msDS:
 
-            return str(key['msDS-KeyVersionNumber']).strip('[]').strip("\'")
+            return str(key['msDS-KeyVersionNumber']).strip('[]\'b')
 
 
 

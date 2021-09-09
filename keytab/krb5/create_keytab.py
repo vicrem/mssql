@@ -48,7 +48,7 @@ class createKeytab:
 
         i = ktutilSpawned.expect([prompt, defaultPrompt], timeout=3)
 
-        lines = ktutilSpawned.before.strip().split('\n')
+        lines = ktutilSpawned.before.strip()
 
         problem = (len(lines) > 1 or  (i == 1))
 
@@ -154,7 +154,7 @@ class createKeytab:
             realmLength = int(struct.unpack_from('>H', keytabData)[0])
             keytabData = keytabData[2:]
             kteDone += 2
-            realmData = keytabData[:realmLength]
+            realmData = keytabData[:realmLength].decode("utf-8") 
 
             debugPrint('realmLength: ', realmLength)
             debugPrint('realmData: ', realmData)
@@ -180,7 +180,7 @@ class createKeytab:
                 keytabData = keytabData[2:]
                 kteDone += 2
 
-                kteComponentData = keytabData[:kteComponentLength]
+                kteComponentData = keytabData[:kteComponentLength].decode("utf-8") 
 
                 debugPrint('kteComponentLength:', kteComponentLength)
                 debugPrint('kteComponentData:', kteComponentData)
@@ -232,7 +232,7 @@ class createKeytab:
             kteDone += 2
 
             #kbdata = keytabData[:kblen]
-            kbdata = [hex(ord(b)) for b in keytabData[:kblen]]
+            kbdata = [hex(b) for b in keytabData[:kblen]]
 
             debugPrint('keyblock_type: ', kbtype)
             debugPrint('keyblock_len: ', kblen)
