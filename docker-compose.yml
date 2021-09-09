@@ -25,7 +25,7 @@ services:
       - "KERBEROS_REALM=VICREM.SE"
       - "LDAP_BASE_DN=DC=vicrem,DC=se"
       # Creating keytab -> Use it on your own risk!!
-      - "CREATE_KEYTAB=False"
+      - "CREATE_KEYTAB=True"
       - "CREATE_KEYTAB_DEBUG=True"
       #- "KRB5_TRACE=/dev/stdout"
       - "KRB5_CONFIG=/etc/krb5.conf"
@@ -56,7 +56,7 @@ services:
       - mssql
     volumes:
       - "/home/vic/docker-volumes/mssql/secrets/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt:ro"
-      - "/home/vic/docker/mssql:/tmp/mssql"
+      #- "/home/vic/docker/mssql:/tmp/mssql"
       - "mssql:/var/opt/mssql"
     labels:
       # Enable Traefik and network
