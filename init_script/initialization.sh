@@ -56,7 +56,6 @@ EOL
 
 cat >/etc/sssd/sssd.conf <<EOL
 [sssd]
-user = sssd
 services = nss
 config_file_version = 2
 domains = ${KERBEROS_REALM}
@@ -162,20 +161,20 @@ CHECK_DIR=(/var/opt/mssql/backup /var/opt/mssql/secrets)
 for dirs in "${CHECK_DIR[@]}"; do
     if [ ! -d $dirs ]; then
         mkdir $dirs && \
-        chown mssql $dirs
+        chown -R mssql $dirs
     fi
 done
 
 
 # Create keytab
 if [ "${CREATE_KEYTAB}" = "True" ]; then
-    python /tmp/keytab/run.py
+    python3 /tmp/keytab/run.py
 fi
 
 
 # Set permission and run sssd
 chmod 600 /etc/sssd/sssd.conf
-exec /usr/sbin/sssd -i -d 4 &
+exec /usr/sbin/sssd -i -d 6 &
 
 
 # Create TLS cert and set permission
