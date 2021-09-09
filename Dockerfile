@@ -2,13 +2,18 @@ FROM mcr.microsoft.com/mssql/server:2019-latest
 
 
 # Environment
+ENV DEBIAN_FRONTEND noninteractive
 ENV GOSU_BINARY https://github.com/tianon/gosu/releases/download/1.12/gosu-amd64
 
 
 # Install packages
 USER root
-RUN apt-get update && \
-    apt-get install -y unixodbc-dev krb5-user sssd python-ldap python-pexpect
+RUN apt-get update \
+ && apt-get install -y unixodbc-dev krb5-user sssd python3-pip \
+                       libsasl2-dev python-dev libldap2-dev libssl-dev
+
+# Python packages
+RUN pip3 install pyldap pexpect
 
 
 # Using gosu to run SQL server as mssql
