@@ -8,7 +8,7 @@ set -e
 # Optional input
 [ -z "${LDAP_ENUMERATE}" ] && LDAP_ENUMERATE="False"
 [ -z "${LDAP_USER_MEMBEROF}" ] && LDAP_USER_MEMBEROF="memberOf"
-[ -z "${LDAP_IGNORE_GROUP_MEMBERS}" ] && LDAP_IGNORE_GROUP_MEMBERS="True"
+[ -z "${LDAP_IGNORE_GROUP_MEMBERS}" ] && LDAP_IGNORE_GROUP_MEMBERS="False"
 [ -z "${LDAP_USER_PRINCIPAL}" ] && LDAP_USER_PRINCIPAL="userPrincipalName"
 [ -z "${KERBEROS_DNS_DISCOVERY_DOMAIN}" ] && KERBEROS_DNS_DISCOVERY_DOMAIN=${KERBEROS_REALM}
 
@@ -183,7 +183,7 @@ chown -R mssql /etc/ssl/private/
 
 
 # Wait to be sure that SQL Server is up & running
-sleep 30s
+sleep 60s
 
 
 # Run sql script
@@ -206,8 +206,10 @@ EOF
 }
 
 # Create login for Admin group
-if [ ! -z "${LDAP_ADMIN_GROUP}" ]; then
-    for groups in $( echo "${LDAP_ADMIN_GROUP}" | sed 's/,/ /g'); do
+if [ ! -z "${MSSQL_ADMIN_GROUP}" ]; then
+    for groups in $( echo "${MSSQL_ADMIN_GROUP}" | sed 's/,/ /g'); do
+
+        echo "Creating MSSQL_ADMIN_GROUP: $groups"
         create_admin_group $groups
         /opt/mssql-tools/bin/sqlcmd -S localhost,${MSSQL_TCP_PORT} -U sa -P ${MSSQL_SA_PASSWORD} -i /tmp/create_admin_group.sql
     done
