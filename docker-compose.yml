@@ -20,7 +20,7 @@ services:
       - "MSSQL_AGENT_ENABLED=True"
       - "MSSQL_SA_PASSWORD=P@ssW0rd1234!"
       # MSSQL admin groups -> Comma-separate -> group1,group2
-      - "LDAP_ADMIN_GROUP=DBA"
+      - "MSSQL_ADMIN_GROUP=DBA"
       # AD settings
       - "KERBEROS_REALM=VICREM.SE"
       - "LDAP_BASE_DN=DC=vicrem,DC=se"
@@ -56,7 +56,6 @@ services:
       - mssql
     volumes:
       - "/home/vic/docker-volumes/mssql/secrets/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt:ro"
-      #- "/home/vic/docker/mssql:/tmp/mssql"
       - "mssql:/var/opt/mssql"
     labels:
       # Enable Traefik and network
